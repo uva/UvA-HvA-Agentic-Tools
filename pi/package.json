@@ -1,0 +1,34 @@
+{
+  "name": "pi-uva-hva",
+  "version": "1.4.0",
+  "description": "Pi coding-agent provider extension for the UvA/HvA LiteLLM proxy. Adds a /login connect flow (pick base URL, paste API key), discovers every model with real capabilities from /model_group/info, routes each to the right endpoint (Responses vs chat-completions) with runtime self-heal, fixes empty output on tool turns, and defeats the gateway 504 on long reasoning turns via a background+poll path.",
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "pi-provider",
+    "pi-coding-agent",
+    "uva",
+    "hva",
+    "litellm",
+    "openai-responses",
+    "llm-provider"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uva/UvA-HvA-Agentic-Tools.git",
+    "directory": "pi"
+  },
+  "type": "module",
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
