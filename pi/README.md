@@ -16,14 +16,92 @@ Amsterdam / Amsterdam University of Applied Sciences LiteLLM proxies
 Get every UvA/HvA model working in Pi in under a minute, without editing Pi's config
 files. Load the extension, run `/login`, pick your proxy, paste your API key, and
 it auto-discovers all available models so you can select one straight from
-`/models`. Your base URL and key are saved, so the next launch just reconnects.
+`/model`. Your base URL and key are saved, so the next launch just reconnects.
 Reasoning models come pre-tuned (thinking on at medium),
 and tool-heavy agent turns that would otherwise silently come back empty on this
 proxy just work. That's the whole setup; everything below is optional detail.
 
+## Quick setup: copy this prompt
+
+Paste this entire block into a coding assistant that can run terminal commands
+on your computer. It sets up Pi and [my current extension set](#my-current-pi-harness);
+you enter credentials yourself afterward. If you only want the UvA/HvA provider,
+use the [manual install](#install) instead.
+
+```text
+Set up Pi with the following extension set on my computer.
+
+1. Detect my OS, shell, Node.js/npm and existing Pi installation. Use Node.js
+   22.19.0 or newer supported LTS, as required by this extension set. If a
+   prerequisite is missing, explain the platform-appropriate installation;
+   ask before using administrator privileges or replacing an existing runtime.
+   If Pi is missing, install it with:
+   npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+   Preserve an existing Pi installation rather than replacing it blindly.
+
+2. Inspect `pi list`. Back up existing Pi settings before making changes.
+   Run `pi install <source>` once for each missing source below, at user scope.
+   Preserve unrelated settings, existing packages, filters, credentials and
+   pinned versions. Recognize an already-installed version of the same package;
+   do not add duplicate entries or silently upgrade it. Do not uninstall other
+   extensions. Install only this list:
+
+   npm:pi-mcp-adapter
+   npm:context-mode
+   npm:pi-simplify
+   npm:pi-hermes-memory
+   npm:@juicesharp/rpiv-voice
+   npm:pi-markdown-preview
+   npm:pi-provider-litellm
+   npm:opencode-codebase-index
+   npm:pi-ask-user
+   npm:pi-btw
+   npm:@gotgenes/pi-anthropic-auth
+   npm:pi-provider-kimi-code
+   npm:@quintinshaw/pi-dynamic-workflows
+   npm:pi-subagents
+   npm:awesome-pi-themes
+   npm:pi-goal-x
+   npm:pi-advisor-flow
+   npm:pi-uva-hva
+   npm:@narumitw/pi-plan-mode
+   npm:@dietrichgebert/ponytail
+
+3. Check installation output and each package's documented prerequisites.
+   If dependency install scripts are blocked, report the affected packages and
+   review their documented setup rather than enabling all scripts globally.
+   Do not configure external MCP servers, activate the microphone, start a
+   project index, or authenticate optional providers as part of installation.
+   Never ask me to paste API keys into this conversation or put them in a repo.
+
+4. Verify `pi --version` and `pi list`, then tell me to restart Pi and check for
+   extension-loading errors. Walk me through `/login`, choosing "UvA / HvA
+   proxy", selecting my university, and entering my own API key privately.
+   Then use `/model` to select an available model. Other providers are optional
+   and need their own credentials; installing them does not grant access.
+
+5. For the UvA/HvA model I choose, if it supports roughly one million context
+   tokens, guide me through `/configure-models`: set Context window to 272000,
+   leave max output and other capabilities unchanged, then Save & apply changes.
+   This is the recommended working context, not an output-token setting or an
+   increase for smaller models. Use a real discovered model ID, never a guessed
+   one. If login/model selection is still pending, report this step as pending.
+
+Finish with installed package versions, any errors or optional setup still
+needed, and the remaining login/model steps. Do not claim the complete harness
+is functional merely because the package installation succeeded. If you cannot
+run commands, give me equivalent commands for my OS instead.
+```
+
+This is a package-selection snapshot, not a version-locked environment. New
+installs resolve the published package versions available at installation time.
+Extensions run with your account's permissions; review the packages before
+installing them. Workflows, subagents and advisors can make additional model
+calls, so check their routing and cost settings before use.
+
 ## Install
 
-You need Pi installed and a UvA/HvA proxy API key.
+For the provider alone, you need Pi installed and a UvA/HvA proxy API key.
 
 ### 1. Load the extension
 
@@ -61,7 +139,7 @@ nothing re-entered. `/uva-login` runs the same flow.
 ### 3. Pick a model
 
 ```
-/models          # select any discovered model
+/model           # select an available discovered model
 ```
 
 Reasoning models default to thinking ON at medium. You can raise or lower a
@@ -80,7 +158,7 @@ variables (all optional):
 | --- | --- | --- |
 | `UVA_API_KEY` | - | API key, if you prefer env over `/login`. |
 | `UVA_BASE_URL` | `https://llmproxy.uva.nl/v1` | Proxy base URL (must end at the `/v1` root). |
-| `UVA_PROVIDER_ID` | `uva` | Provider id shown in `/models` and `--provider`. |
+| `UVA_PROVIDER_ID` | `uva` | Provider id shown in `/model` and `--provider`. |
 | `UVA_CREDENTIALS_FILE` | `~/.pi/agent/openai-responses-uva.json` | Override the saved-credentials path. |
 | `UVA_NO_AUTO_THINKING` | - | Set to disable the medium thinking default. |
 | `UVA_MODEL_OVERRIDES_FILE` | - | Path to a JSON file overriding per-model capabilities (below). |
@@ -102,7 +180,7 @@ default path above):
 
 ```json
 {
-  "gpt-5.6-sol":    { "contextWindow": 1100000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
+  "gpt-5.6-sol":    { "contextWindow": 272000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
   "some-new-model": { "reasoning": false, "input": ["text", "image"], "contextWindow": 200000, "maxTokens": 32000 }
 }
 ```
@@ -113,6 +191,36 @@ one model to `high`; by default every reasoning model starts at `medium`.
 Each key is a model id; each value may set any of `reasoning`,
 `defaultThinkingLevel` (`off`/`low`/`medium`/`high`), `input`, `contextWindow`,
 `maxTokens`, `vision`, `name`, `cost`, `thinkingLevelMap`.
+
+### Recommended context window for 1M models
+
+**I recommend a 272k (272,000-token) working context window when using a model
+that supports roughly one million context tokens.** This is my working-context
+preference, not a claim that the model's actual capacity is only 272k or that
+this setting guarantees a particular price or performance improvement.
+
+For this UvA/HvA provider, run `/configure-models`, select your model, set
+**Context window** to **272000**, then choose **Save & apply changes**. Leave
+**Max output tokens** and the other capabilities unchanged. This controls Pi's
+context accounting; it is not an output-token limit. Do not raise smaller
+models' context windows to 272k.
+
+To configure it by hand, merge the following into
+`~/.pi/agent/openai-responses-uva.models.json` (or your
+`UVA_MODEL_OVERRIDES_FILE`), preserving all other models and settings:
+
+```json
+{
+  "YOUR_DISCOVERED_1M_MODEL_ID": { "contextWindow": 272000 }
+}
+```
+
+Replace the placeholder with an actual model ID from your proxy. Restart Pi
+after a manual file edit; the interactive menu applies its changes live.
+`/configure-models` belongs to this provider, not to all Pi providers. For other
+providers, use their documented context override mechanism; Pi also supports
+per-provider `modelOverrides` in `~/.pi/agent/models.json`. A
+`contextWindow` field in the general `settings.json` is not the equivalent.
 
 ## How it works
 
@@ -176,137 +284,74 @@ default thinking level, per-id via `UVA_MODEL_OVERRIDES_FILE` or
 - Imports only the extension-facing `@earendil-works/pi-ai` surface, so it keeps
   working across Pi updates (it does not patch `node_modules`).
 
-## Recommended extensions
+## My current Pi harness
 
-Pi becomes far more capable with a few extensions. These are the ones I run
-alongside this provider, grouped by what they do, with install commands below.
+This replaces the old recommendation list with the **20 packages actually
+installed in my Pi development harness**, checked on **7 September 2026**
+(Pi **0.85.0**, Node **22.23.2**). It is a description of my setup, not a
+requirement to install everything just to use the university proxy. The
+[copy-paste setup prompt](#quick-setup-copy-this-prompt) contains the full
+installation list. Pi-lens is not part of this setup.
 
-### Context, memory & compaction
+### Context, memory & codebase tools
 
-These three cover the three layers with one tool each, so nothing overlaps:
-
-| Extension | Layer | What it does |
-| --- | --- | --- |
-| [context-mode](https://github.com/mksglu/context-mode) | Tool output | Offloads large tool/command output into a sandbox and a searchable store so it never floods your context window. |
-| [pi-smart-compact](https://github.com/alpertarhan/pi-smart-compact) | History | Verification-oriented conversation compaction: deterministic extract, then synthesize, then verify what survived. |
-| [gentle-engram](https://github.com/Gentleman-Programming/engram) | Memory | Persistent memory shared across sessions, compactions, and MCP agents. |
-
-### Planning, workflows & subagents
-
-| Extension | What it does |
+| Package | What I use it for |
 | --- | --- |
-| [@juicesharp/rpiv-pi](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-pi) | Skill-based dev workflow: discover → research → design → plan → implement → validate → review. |
-| [pi-code-planner](https://github.com/m62624/pi-code-planner) | Structured planning, TDD, and Git worktrees for local coding agents. |
-| [@gotgenes/pi-subagents](https://github.com/gotgenes/pi-packages/tree/main/packages/pi-subagents) | In-process sub-agent core with a typed API and lifecycle events. |
-| [@quintinshaw/pi-dynamic-workflows](https://github.com/QuintinShaw/pi-dynamic-workflows) | Fan a task across hundreds of subagents with real model routing and cost accounting. |
-| [@juicesharp/rpiv-workflow](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-workflow) | Chain skills into typed multi-stage workflows with audited state. |
-| [@juicesharp/rpiv-todo](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-todo) | A live todo overlay for the model that survives `/reload` and compaction. |
+| [context-mode](https://www.npmjs.com/package/context-mode) | Process large tool outputs outside the conversation and retrieve relevant content from a searchable store. |
+| [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
+| [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
+| [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter) | Connect separately configured MCP tools and servers. |
 
-### Providers & models
+### Planning, delegation & code quality
 
-| Extension | What it does |
+| Package | What I use it for |
 | --- | --- |
-| [pi-multi-account](https://github.com/Sarrius/pi-multi-account) | Automatic multi-account failover & rotation across Anthropic, OpenAI, Qwen, Ollama. |
-| [glm-vision](https://www.npmjs.com/package/glm-vision) | Gives non-vision GLM models (z.ai) image understanding via GLM-4.6V. |
+| [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
+| [@quintinshaw/pi-dynamic-workflows](https://www.npmjs.com/package/@quintinshaw/pi-dynamic-workflows) | Multi-agent workflows with model routing, progress and usage tracking. |
+| [pi-subagents](https://www.npmjs.com/package/pi-subagents) | Focused delegation and scripted multi-agent execution. |
+| [pi-goal-x](https://www.npmjs.com/package/pi-goal-x) | Persistent goals, structured tasks, continuation and completion auditing. |
+| [pi-advisor-flow](https://www.npmjs.com/package/pi-advisor-flow) | On-demand second opinions from an advisor model. |
+| [pi-ask-user](https://www.npmjs.com/package/pi-ask-user) | Structured questions and explicit user decisions. |
+| [pi-simplify](https://www.npmjs.com/package/pi-simplify) | Review changed code for clarity and maintainability. |
+| [@dietrichgebert/ponytail](https://www.npmjs.com/package/@dietrichgebert/ponytail) | Keep implementations small and avoid unnecessary complexity. |
 
-### Tools & UX
+### Providers
 
-| Extension | What it does |
+| Package | What I use it for |
 | --- | --- |
-| [@juicesharp/rpiv-web-tools](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-web-tools) | Web search + fetch for the model with pluggable providers (Brave, Tavily, Exa, …). |
-| [pi-mcp-adapter](https://github.com/nicobailon/pi-mcp-adapter) | Connect any MCP (Model Context Protocol) server to Pi. |
-| [@amaster.ai/pi-computer-use](https://github.com/TGYD-helige/pi) | Desktop automation via `computer_use_*` tools. |
-| [pi-image-paste](https://github.com/tuanhung303/pi-image-paste) | Turns pasted image paths into first-class image attachments. |
-| [@trevonistrevon/pi-loop](https://github.com/trvon/pi-loop) | Cron/event re-wake loops and background process monitoring. |
-| [@juicesharp/rpiv-ask-user-question](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-ask-user-question) | Lets the model ask you a structured, typed questionnaire instead of guessing. |
-| [@juicesharp/rpiv-advisor](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-advisor) | A second opinion the model can request from a stronger reviewer model. |
-| [@juicesharp/rpiv-args](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-args) | `$1` / `$ARGUMENTS` placeholders and shell substitution in skills. |
-| [@juicesharp/rpiv-i18n](https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-i18n) | Localization foundation for the `rpiv-*` skills (`/languages`, `--locale`). |
+| [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
+| [pi-provider-litellm](https://www.npmjs.com/package/pi-provider-litellm) | Other LiteLLM proxy connections. |
+| [@gotgenes/pi-anthropic-auth](https://www.npmjs.com/package/@gotgenes/pi-anthropic-auth) | Anthropic OAuth compatibility. |
+| [pi-provider-kimi-code](https://www.npmjs.com/package/pi-provider-kimi-code) | Kimi Code provider integration. |
 
-### Code quality
+### Interface & convenience
 
-| Extension | What it does |
+| Package | What I use it for |
 | --- | --- |
-| [pi-simplify](https://github.com/MattDevy/pi-extensions/tree/main/packages/pi-simplify) | Reviews recently changed code for clarity, consistency, and maintainability. |
-| [ponytail](https://github.com/DietrichGebert/ponytail) | Lazy senior dev mode: stops the agent over-engineering and writes the minimum code that works, with `/ponytail` review/audit/debt commands. |
+| [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
+| [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
+| [pi-btw](https://www.npmjs.com/package/pi-btw) | Side conversations without interrupting the main task. |
+| [awesome-pi-themes](https://www.npmjs.com/package/awesome-pi-themes) | Additional terminal themes. |
 
-### Install them
+### Setup and verification notes
 
-Pi auto-installs anything listed in the `packages` array of
-`~/.pi/agent/settings.json` on the next launch, with no manual `npm install`.
-
-All at once: merge this into your `packages` array (keep any entries you
-already have), then restart Pi:
-
-```jsonc
-{
-  "packages": [
-    "npm:context-mode",
-    "npm:pi-smart-compact",
-    "npm:gentle-engram",
-    "npm:@juicesharp/rpiv-pi",
-    "npm:pi-code-planner",
-    "npm:@gotgenes/pi-subagents",
-    "npm:@quintinshaw/pi-dynamic-workflows",
-    "npm:@juicesharp/rpiv-workflow",
-    "npm:@juicesharp/rpiv-todo",
-    "npm:pi-multi-account",
-    "npm:glm-vision",
-    "npm:@juicesharp/rpiv-web-tools",
-    "npm:pi-mcp-adapter",
-    "npm:@amaster.ai/pi-computer-use",
-    "npm:pi-image-paste",
-    "npm:@trevonistrevon/pi-loop",
-    "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:@juicesharp/rpiv-advisor",
-    "npm:@juicesharp/rpiv-args",
-    "npm:@juicesharp/rpiv-i18n",
-    "npm:pi-simplify",
-    "npm:opencode-ponytail"
-  ]
-}
-```
-
-One by one: add a single line to the same `packages` array and restart Pi.
-Each entry is just `"npm:<name>"`, e.g.:
-
-```jsonc
-"packages": [
-  "npm:context-mode"
-]
-```
-
-### Setup notes (extensions with a background DB or service)
-
-Most of these are pure extensions that work the moment they're in `packages`. A
-few run a background database or service and need one extra thing to work on a
-single install:
-
-- Node ≥ 22.5.0, required by `context-mode`. It stores its knowledge base in
-  SQLite and relies on Node's built-in `node:sqlite` (older Node falls back to a
-  native module that can crash). Check with `node -v`. Its `postinstall`
-  auto-wires the Pi hooks and heals the native binding, so no manual setup is
-  needed. Just verify afterward with `/context-mode:ctx-doctor` (or
-  `npx context-mode doctor`). If an install ever complains about
-  `better-sqlite3`, upgrading Node to 22.5+ is the fix. Known quirk: if you also
-  have a `~/.claude` folder, context-mode may store its knowledge base there
-  instead of under `~/.pi`; harmless, but that is where to look for it.
-
-- `gentle-engram` needs the Engram backend. The npm package is only the Pi
-  bridge: persistence is handled by a separate `engram` binary that it launches
-  as an MCP server. Install Engram from
-  [Gentleman-Programming/engram](https://github.com/Gentleman-Programming/engram)
-  and make sure `engram` is on your `PATH` (or set `ENGRAM_BIN`); otherwise the
-  memory tools load but nothing is saved. Also keep only one engram entry in
-  `packages`: `npm:gentle-engram`, not a second pinned copy like
-  `npm:gentle-engram@0.1.8`.
-
-> Some of these overlap in purpose. `rpiv-todo` gives the model its `todo`
-> tracker; `pi-loop` also ships a native `TaskCreate` fallback that only
-> activates when no dedicated task system is present, so it just sits unused
-> beside `todo` (harmless, not a conflict). Several planning and workflow
-> engines overlap too. Start with the context/memory group, then add planning
-> and tools as you need them rather than enabling all of them at once.
+- **Runtime:** the full set needs Node **22.19.0+** (or a newer supported LTS),
+  not merely context-mode's lower 22.5.0 minimum. Check `node --version`.
+- **Installation:** use `pi install npm:<package>` for each desired package.
+  Check `pi list`, then restart Pi. Existing settings and packages should be
+  preserved rather than replaced by someone else's configuration.
+- **Native dependencies:** a successful package listing does not prove that
+  every extension loads or that its optional features work. Inspect startup
+  errors and blocked install-script warnings. Follow the affected package's
+  setup instructions; a Node upgrade alone is not a universal native-binding
+  fix. Run context-mode's `/context-mode:ctx-doctor` after loading it.
+- **Optional integrations:** MCP needs server configuration; additional
+  providers need their own authentication; code indexing may need embedding
+  configuration; voice needs microphone/audio support and speech-model assets;
+  preview/export may need extra rendering tools. Configure only what you use.
+- **Scope:** this list copies my package selection, not my credentials, MCP
+  endpoints, model routing, custom agents, personal skills or permission rules.
+  Installing the packages alone does not reproduce those private settings.
 
 ## License
 
