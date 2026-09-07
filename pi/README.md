@@ -24,9 +24,9 @@ proxy just work. That's the whole setup; everything below is optional detail.
 ## Quick setup: copy this prompt
 
 Paste this entire block into a coding assistant that can run terminal commands
-on your computer. It sets up Pi and [my current extension set](#my-current-pi-harness);
+on your computer. It sets up Pi and [current extension set](#my-current-pi-harness);
 you enter credentials yourself afterward. If you only want the UvA/HvA provider,
-use the [manual install](#install) instead.
+use the [manual install](#install).
 
 ```text
 Set up Pi with the following extension set on my computer.
@@ -284,18 +284,16 @@ default thinking level, per-id via `UVA_MODEL_OVERRIDES_FILE` or
 - Imports only the extension-facing `@earendil-works/pi-ai` surface, so it keeps
   working across Pi updates (it does not patch `node_modules`).
 
-## My current Pi harness
+## Pi harness setup
 
-This replaces the old recommendation list with the **20 packages actually
-installed in my Pi development harness**, checked on **7 September 2026**
-(Pi **0.85.0**, Node **22.23.2**). It is a description of my setup, not a
+This is a description of a recommended setup, not a
 requirement to install everything just to use the university proxy. The
 [copy-paste setup prompt](#quick-setup-copy-this-prompt) contains the full
-installation list. Pi-lens is not part of this setup.
+installation list.
 
 ### Context, memory & codebase tools
 
-| Package | What I use it for |
+| Package |
 | --- | --- |
 | [context-mode](https://www.npmjs.com/package/context-mode) | Process large tool outputs outside the conversation and retrieve relevant content from a searchable store. |
 | [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
@@ -317,7 +315,7 @@ installation list. Pi-lens is not part of this setup.
 
 ### Providers
 
-| Package | What I use it for |
+| Package | 
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
 | [pi-provider-litellm](https://www.npmjs.com/package/pi-provider-litellm) | Other LiteLLM proxy connections. |
@@ -326,32 +324,12 @@ installation list. Pi-lens is not part of this setup.
 
 ### Interface & convenience
 
-| Package | What I use it for |
+| Package | 
 | --- | --- |
 | [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
 | [pi-btw](https://www.npmjs.com/package/pi-btw) | Side conversations without interrupting the main task. |
 | [awesome-pi-themes](https://www.npmjs.com/package/awesome-pi-themes) | Additional terminal themes. |
-
-### Setup and verification notes
-
-- **Runtime:** the full set needs Node **22.19.0+** (or a newer supported LTS),
-  not merely context-mode's lower 22.5.0 minimum. Check `node --version`.
-- **Installation:** use `pi install npm:<package>` for each desired package.
-  Check `pi list`, then restart Pi. Existing settings and packages should be
-  preserved rather than replaced by someone else's configuration.
-- **Native dependencies:** a successful package listing does not prove that
-  every extension loads or that its optional features work. Inspect startup
-  errors and blocked install-script warnings. Follow the affected package's
-  setup instructions; a Node upgrade alone is not a universal native-binding
-  fix. Run context-mode's `/context-mode:ctx-doctor` after loading it.
-- **Optional integrations:** MCP needs server configuration; additional
-  providers need their own authentication; code indexing may need embedding
-  configuration; voice needs microphone/audio support and speech-model assets;
-  preview/export may need extra rendering tools. Configure only what you use.
-- **Scope:** this list copies my package selection, not my credentials, MCP
-  endpoints, model routing, custom agents, personal skills or permission rules.
-  Installing the packages alone does not reproduce those private settings.
 
 ## License
 
