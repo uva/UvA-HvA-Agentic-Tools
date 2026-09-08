@@ -292,7 +292,7 @@ installation list.
 
 ### Context, memory & codebase tools
 
-| Package |
+| Package | Used for |
 | --- | --- |
 | [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
 | [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
@@ -313,7 +313,7 @@ installation list.
 
 ### Providers
 
-| Package | 
+| Package | Used for |
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
 | [pi-provider-litellm](https://www.npmjs.com/package/pi-provider-litellm) | Other LiteLLM proxy connections. |
@@ -322,7 +322,7 @@ installation list.
 
 ### Interface & convenience
 
-| Package | 
+| Package | Used for | 
 | --- | --- |
 | [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
