@@ -51,13 +51,10 @@ Set up Pi with the following extension set on my computer.
    npm:pi-hermes-memory
    npm:@juicesharp/rpiv-voice
    npm:pi-markdown-preview
-   npm:pi-provider-litellm
    npm:opencode-codebase-index
    npm:pi-ask-user
    npm:pi-btw
    npm:@gotgenes/pi-anthropic-auth
-   npm:pi-provider-kimi-code
-   npm:@quintinshaw/pi-dynamic-workflows
    npm:pi-subagents
    npm:awesome-pi-themes
    npm:pi-goal-x
@@ -303,7 +300,6 @@ installation list.
 | Package | description |
 | --- | --- |
 | [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
-| [@quintinshaw/pi-dynamic-workflows](https://www.npmjs.com/package/@quintinshaw/pi-dynamic-workflows) | Multi-agent workflows with model routing, progress and usage tracking. |
 | [pi-subagents](https://www.npmjs.com/package/pi-subagents) | Focused delegation and scripted multi-agent execution. |
 | [pi-goal-x](https://www.npmjs.com/package/pi-goal-x) | Persistent goals, structured tasks, continuation and completion auditing. |
 | [pi-advisor-flow](https://www.npmjs.com/package/pi-advisor-flow) | On-demand second opinions from an advisor model. |
@@ -316,9 +312,7 @@ installation list.
 | Package | description |
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
-| [pi-provider-litellm](https://www.npmjs.com/package/pi-provider-litellm) | Other LiteLLM proxy connections. |
 | [@gotgenes/pi-anthropic-auth](https://www.npmjs.com/package/@gotgenes/pi-anthropic-auth) | Anthropic OAuth compatibility. |
-| [pi-provider-kimi-code](https://www.npmjs.com/package/pi-provider-kimi-code) | Kimi Code provider integration. |
 
 ### Interface & convenience
 
