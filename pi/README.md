@@ -47,7 +47,6 @@ Set up Pi with the following extension set on my computer.
    extensions. Install only this list:
 
    npm:pi-mcp-adapter
-   npm:context-mode
    npm:pi-simplify
    npm:pi-hermes-memory
    npm:@juicesharp/rpiv-voice
@@ -295,7 +294,6 @@ installation list.
 
 | Package |
 | --- | --- |
-| [context-mode](https://www.npmjs.com/package/context-mode) | Process large tool outputs outside the conversation and retrieve relevant content from a searchable store. |
 | [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
 | [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
 | [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter) | Connect separately configured MCP tools and servers. |
