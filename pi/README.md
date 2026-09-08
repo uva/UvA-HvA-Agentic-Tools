@@ -292,7 +292,7 @@ installation list.
 
 ### Context, memory & codebase tools
 
-| Package | Used for |
+| Package | description |
 | --- | --- |
 | [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
 | [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
@@ -300,7 +300,7 @@ installation list.
 
 ### Planning, delegation & code quality
 
-| Package | Used for |
+| Package | description |
 | --- | --- |
 | [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
 | [@quintinshaw/pi-dynamic-workflows](https://www.npmjs.com/package/@quintinshaw/pi-dynamic-workflows) | Multi-agent workflows with model routing, progress and usage tracking. |
@@ -313,7 +313,7 @@ installation list.
 
 ### Providers
 
-| Package | Used for |
+| Package | description |
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
 | [pi-provider-litellm](https://www.npmjs.com/package/pi-provider-litellm) | Other LiteLLM proxy connections. |
@@ -322,7 +322,7 @@ installation list.
 
 ### Interface & convenience
 
-| Package | Used for | 
+| Package | description | 
 | --- | --- |
 | [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
