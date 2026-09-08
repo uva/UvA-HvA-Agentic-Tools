@@ -300,7 +300,7 @@ installation list.
 
 ### Planning, delegation & code quality
 
-| Package | What I use it for |
+| Package | Used for |
 | --- | --- |
 | [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
 | [@quintinshaw/pi-dynamic-workflows](https://www.npmjs.com/package/@quintinshaw/pi-dynamic-workflows) | Multi-agent workflows with model routing, progress and usage tracking. |
