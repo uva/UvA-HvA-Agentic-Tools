@@ -135,6 +135,12 @@ your API key. The extension discovers every model and saves your base URL + key
 to ~/.pi/agent/openai-responses-uva.json, so the next launch reconnects with
 nothing re-entered. /uva-login runs the same flow.
 
+Pi only lists the models that actually work for your key. During login, each
+model gets one tiny test request, so login can take up to two minutes. Models
+that return an error (for example a broken deployment on the proxy) are hidden.
+The result is remembered for a day, then checked again in the background when
+you start Pi. Run /login again to re-check right away.
+
 > Prefer env vars? Set UVA_API_KEY (and optionally UVA_BASE_URL) instead of
 > /login. Both work.
 
@@ -191,7 +197,7 @@ The defaultThinkingLevel on gpt-5.6-sol above is just an example of pinning
 one model to high; by default every reasoning model starts at medium.
 
 Each key is a model id; each value may set any of reasoning,
-defaultThinkingLevel (off/low/medium/high), input, contextWindow,
+defaultThinkingLevel (off/low/medium/high/xhigh/max), input, contextWindow,
 maxTokens, vision, name, cost, thinkingLevelMap.
 
 ### Recommended context window for 1M models

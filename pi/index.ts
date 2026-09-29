@@ -119,10 +119,10 @@ function saveCreds(creds: { baseUrl: string; apiKey: string }): void {
 }
 
 // Models that are not chat/response models, never register these.
-const DENY = /embedding|whisper|audio|tts|speech|dall|(^|[-_])image|document-ai|ocr|rerank|moderation|guard|stable-diffusion/i;
+const DENY = /embedding|whisper|audio|tts|speech|dall|(^|[-_])image|document-ai|ocr|rerank|moderation|guard|stable-diffusion|batch/i;
 
 // Known-good fallback if /v1/models discovery fails.
-const FALLBACK_MODEL_IDS = ["gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.5", "gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o"];
+const FALLBACK_MODEL_IDS = ["gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.5", "gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o"];
 
 // ---------------------------------------------------------------------------
 // FALLBACK capability table.
@@ -144,8 +144,10 @@ const FALLBACK_MODEL_IDS = ["gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.5", "gpt-5.1",
 type Caps = { ctx: number; out: number; reasoning: boolean; vision: boolean };
 
 const CAPS: Array<{ re: RegExp; caps: Caps }> = [
+  // OpenAI GPT-6 (astra / sol / luna) and later
+  { re: /^gpt-[6-9]/i, caps: { ctx: 1_050_000, out: 128_000, reasoning: true, vision: true } },
   // OpenAI GPT-5.x
-  { re: /^gpt-5\.6/i, caps: { ctx: 1_100_000, out: 128_000, reasoning: true, vision: true } },
+  { re: /^gpt-5\.6/i, caps: { ctx: 1_050_000, out: 128_000, reasoning: true, vision: true } },
   { re: /^gpt-5\.[45]/i, caps: { ctx: 1_050_000, out: 128_000, reasoning: true, vision: true } },
   { re: /^gpt-5\.1/i, caps: { ctx: 400_000, out: 128_000, reasoning: true, vision: true } },
   { re: /^gpt-5(-|$)/i, caps: { ctx: 400_000, out: 128_000, reasoning: true, vision: true } }, // gpt-5 / -mini / -nano
@@ -185,13 +187,23 @@ const REASONING_THINKING_MAP = {
   max: null,
 } as const;
 
+// GPT-5.6 / GPT-6 accept none/low/medium/high/xhigh/max (verified on the HvA
+// proxy; "minimal" is rejected), so expose xhigh + max for them. Pi sends
+// effort "none" for thinking=off; OpenAI docs: GPT-6 Astra rejects "none", so
+// off:null hides "off" for Astra and Pi clamps it up to "low".
+function thinkingMapFor(id: string) {
+  if (!/^gpt-(5\.6|[6-9])/i.test(id)) return REASONING_THINKING_MAP;
+  const map = { ...REASONING_THINKING_MAP, xhigh: "xhigh", max: "max" };
+  return /astra/i.test(id) ? { ...map, off: null } : map;
+}
+
 // Endpoint routing. Some models speak the OpenAI Responses API (/v1/responses);
 // open-weight vLLM deployments only speak /v1/chat/completions and 404 on
 // /responses. We derive this from the proxy's own /model_group/info metadata
 // (backend `providers`), fall back to a name regex when metadata is absent, and
 // SELF-HEAL at runtime: a Responses turn that 404s is retried on
 // chat-completions and the id is remembered for the rest of the session.
-const RESPONSES_CAPABLE = /^(gpt-4|gpt-5|o[0-9]|claude|model-router|grok|gemini)/i;
+const RESPONSES_CAPABLE = /^(gpt-4|gpt-[5-9]|o[0-9]|claude|model-router|grok|gemini)/i;
 const RESPONSES_PROVIDERS = /azure|bedrock|vertex|anthropic|openai_responses/i;
 
 // The model defs from the most recent registration (for the /configure-models
@@ -205,6 +217,10 @@ const routeOverrides = new Map<string, "responses" | "chat">();
 
 function routeForModel(id: string, providers?: string[]): "responses" | "chat" {
   if (routeOverrides.has(id)) return routeOverrides.get(id)!;
+  // GPT-6 always goes to /responses, even if the backend is reported as plain
+  // "openai": per OpenAI docs its tool calling only works there. A 404 there
+  // still self-heals to chat.
+  if (/^gpt-[6-9]/i.test(id)) return "responses";
   if (providers && providers.length) {
     return providers.some((p) => RESPONSES_PROVIDERS.test(p)) ? "responses" : "chat";
   }
@@ -218,8 +234,8 @@ function currentRoute(id: string): "responses" | "chat" {
 function resolveCaps(id: string): Caps {
   for (const { re, caps } of CAPS) if (re.test(id)) return caps;
   // Unknown / future model: infer conservatively.
-  const reasoning = /gpt-5|gpt-oss/i.test(id) || /^o[134](-|$)/i.test(id);
-  const vision = /gpt-4|gpt-5|claude|gemini|vl|vision|nova/i.test(id);
+  const reasoning = /gpt-[5-9]|gpt-oss/i.test(id) || /^o[134](-|$)/i.test(id);
+  const vision = /gpt-[4-9]|claude|gemini|vl|vision|nova/i.test(id);
   return { ctx: reasoning ? 400_000 : 128_000, out: reasoning ? 128_000 : 16_384, reasoning, vision };
 }
 
@@ -252,7 +268,7 @@ function buildModelDef(info: ModelInfo, overrides: Record<string, any>) {
     cost,
     contextWindow: ctx,
     maxTokens: out,
-    ...(reasoning ? { thinkingLevelMap: ov.thinkingLevelMap || REASONING_THINKING_MAP } : {}),
+    ...(reasoning ? { thinkingLevelMap: ov.thinkingLevelMap || thinkingMapFor(id) } : {}),
   };
 }
 
@@ -343,19 +359,27 @@ async function fetchModelInfos(apiKey: string | undefined, baseUrl: string): Pro
   return infos;
 }
 
-// Fallback discovery: /v1/models returns ids only (no capabilities).
-async function fetchModelIds(apiKey: string | undefined, baseUrl: string): Promise<string[]> {
+// Fallback discovery: /v1/models. Plain OpenAI returns ids only; LiteLLM also
+// adds mode and token limits, which we keep when present (keys that may not
+// call /model_group/info, e.g. on the HvA proxy, still get real limits).
+async function fetchModelIds(apiKey: string | undefined, baseUrl: string): Promise<ModelInfo[]> {
   const root = baseUrl.replace(/\/+$/, "");
   const res = await fetch(`${root}/models`, {
     headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
   });
   if (!res.ok) throw new Error(`GET ${root}/models -> HTTP ${res.status}`);
   const data: any = await res.json();
-  const ids = (Array.isArray(data?.data) ? data.data : [])
-    .map((m: any) => m?.id)
-    .filter((id: any): id is string => typeof id === "string" && id.length > 0);
-  if (ids.length === 0) throw new Error("no models returned by /v1/models");
-  return ids;
+  const num = (v: any) => (typeof v === "number" && v > 0 ? v : 0);
+  const infos: ModelInfo[] = (Array.isArray(data?.data) ? data.data : [])
+    .filter((m: any) => typeof m?.id === "string" && m.id.length > 0)
+    .map((m: any) => ({
+      id: m.id,
+      mode: typeof m.mode === "string" ? m.mode : "",
+      ctx: num(m.max_input_tokens),
+      out: num(m.max_output_tokens),
+    }));
+  if (infos.length === 0) throw new Error("no models returned by /v1/models");
+  return infos;
 }
 
 // Layered discovery: rich metadata first, ids-only fallback. Throws only if
@@ -369,8 +393,7 @@ async function discoverModels(apiKey: string | undefined, baseUrl: string): Prom
       `[openai-responses-uva] /model_group/info unavailable (${err instanceof Error ? err.message : String(err)}); falling back to /v1/models.`,
     );
   }
-  const ids = await fetchModelIds(apiKey, baseUrl);
-  return ids.map((id) => ({ id }));
+  return fetchModelIds(apiKey, baseUrl);
 }
 
 // ---------------------------------------------------------------------------
@@ -956,10 +979,11 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
       out.end();
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      // Self-heal: this model isn't on /responses (proxy 404 / "not found").
+      // Self-heal: this model isn't on /responses (proxy 404 / "not found", or
+      // an Azure deployment whose api-version predates the Responses API).
       // Remember it as chat-only and reissue this turn on chat-completions.
       const notOnResponses =
-        (error as any)?.status === 404 || /HTTP 404|not found|does not exist|no model group|NotFound/i.test(msg);
+        (error as any)?.status === 404 || /HTTP 404|not found|does not exist|no model group|NotFound|Responses API is enabled only/i.test(msg);
       if (notOnResponses && output.content.length === 0 && !options?.signal?.aborted) {
         routeOverrides.set(model.id, "chat");
         try {
@@ -1002,6 +1026,96 @@ async function buildModels(apiKey: string | undefined, baseUrl: string): Promise
   return infos
     .filter((info) => !DENY.test(info.id) && !(info.mode && EXCLUDED_MODES.has(info.mode)))
     .map((info) => buildModelDef(info, overrides));
+}
+
+// ---------------------------------------------------------------------------
+// Health check: only list models that actually answer.
+//
+// The proxy lists every deployment, including ones that are misconfigured
+// upstream (e.g. HvA's gpt-5 / gpt-5.5 return 500s on both endpoints). We send
+// each model one tiny request on the route we would use, retry on chat when
+// /responses is not enabled for it, and hide models that give a definite error.
+// Timeouts and 429s keep the model (slow != broken). Results are cached per
+// base URL for a day; /login always re-checks.
+// ponytail: one sample per model, so a model that fails intermittently can be
+// hidden (or shown) until the next check; sample more if that bites.
+// ---------------------------------------------------------------------------
+
+const PROBE_TTL_MS = 24 * 60 * 60 * 1000;
+type ProbeCache = { baseUrl: string; at: number; broken: string[]; chat: string[] };
+
+function probeFile(): string {
+  return credsFile().replace(/\.json$/, "") + ".health.json";
+}
+
+function loadProbe(baseUrl: string): ProbeCache | null {
+  try {
+    const { readFileSync } = require("node:fs");
+    const c = JSON.parse(readFileSync(probeFile(), "utf8"));
+    return c?.baseUrl === baseUrl && Date.now() - c.at < PROBE_TTL_MS ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+// "ok" | "chat" (works, but only on chat-completions) | "broken"
+async function probeOne(apiKey: string, baseUrl: string, id: string): Promise<"ok" | "chat" | "broken"> {
+  const call = async (path: string, body: any): Promise<{ status: number; text: string } | null> => {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: id, ...body }),
+        // The proxy gateway answers 504 by ~90s, so this rarely fires.
+        signal: AbortSignal.timeout(100_000),
+      });
+      return { status: res.status, text: await res.text() };
+    } catch {
+      return null; // timeout / network: unknown, keep the model
+    }
+  };
+  const failed = (r: { status: number } | null) => !!r && r.status >= 400 && r.status !== 429;
+  const chatBody = { messages: [{ role: "user", content: "hi" }], max_tokens: 16 };
+
+  if (currentRoute(id) === "chat") return failed(await call("/chat/completions", chatBody)) ? "broken" : "ok";
+  const r = await call("/responses", { input: "hi", max_output_tokens: 16 });
+  if (!failed(r)) return "ok";
+  if (!/Responses API is enabled only|not found|does not exist|NotFound/i.test(r!.text)) return "broken";
+  return failed(await call("/chat/completions", chatBody)) ? "broken" : "chat";
+}
+
+async function probeModels(apiKey: string, baseUrl: string, ids: string[]): Promise<ProbeCache> {
+  const results = await Promise.all(ids.map((id) => probeOne(apiKey, baseUrl, id)));
+  const cache: ProbeCache = {
+    baseUrl,
+    at: Date.now(),
+    broken: ids.filter((_, i) => results[i] === "broken"),
+    chat: ids.filter((_, i) => results[i] === "chat"),
+  };
+  try {
+    const { writeFileSync, mkdirSync } = require("node:fs");
+    const { dirname } = require("node:path");
+    mkdirSync(dirname(probeFile()), { recursive: true });
+    writeFileSync(probeFile(), JSON.stringify(cache, null, 2));
+  } catch {
+    /* cache is best-effort */
+  }
+  return cache;
+}
+
+// Discover, then drop broken models and pin chat-only ones (from the cache, or a
+// fresh probe when `probe` is set).
+async function buildWorkingModels(apiKey: string | undefined, baseUrl: string, probe: boolean): Promise<any[]> {
+  let health = loadProbe(baseUrl);
+  if (health) for (const id of health.chat) routeOverrides.set(id, "chat");
+  let models = await buildModels(apiKey, baseUrl);
+  if (probe && apiKey) {
+    health = await probeModels(apiKey, baseUrl, models.map((m) => m.id));
+    for (const id of health.chat) routeOverrides.set(id, "chat");
+    models = await buildModels(apiKey, baseUrl);
+  }
+  const broken = new Set(health?.broken ?? []);
+  return models.filter((m) => !broken.has(m.id));
 }
 
 function registerProviderNow(pi: ExtensionAPI, models: any[], baseUrl: string): void {
@@ -1051,13 +1165,15 @@ function makeOAuth(pi: ExtensionAPI) {
       const apiKey = key.trim();
 
       callbacks.onProgress?.("Discovering models…");
-      const infos = await discoverModels(apiKey, baseUrl); // throws on a bad key/url -> login fails
-      callbacks.onProgress?.(`Connected, ${infos.length} models available.`);
+      await discoverModels(apiKey, baseUrl); // throws on a bad key/url -> login fails
+      callbacks.onProgress?.("Checking which models work (can take up to 2 minutes)\u2026");
+      const models = await buildWorkingModels(apiKey, baseUrl, true);
+      callbacks.onProgress?.(`Connected, ${models.length} working models available.`);
 
       saveCreds({ baseUrl, apiKey });
       activeApiKey = apiKey;
       activeBaseUrl = baseUrl;
-      registerProviderNow(pi, await buildModels(apiKey, baseUrl), baseUrl);
+      registerProviderNow(pi, models, baseUrl);
 
       return {
         access: apiKey,
@@ -1139,7 +1255,7 @@ async function configureOneModel(ctx: any, id: string, draft: Record<string, any
       const v = await ctx.ui.select(`${id} - reasoning (thinking) support`, ["on", "off"]);
       if (v) ov.reasoning = v === "on";
     } else if (pick.startsWith("Default thinking")) {
-      const v = await ctx.ui.select(`${id} - default thinking level when selected`, ["off", "low", "medium", "high"]);
+      const v = await ctx.ui.select(`${id} - default thinking level when selected`, ["off", "low", "medium", "high", "xhigh", "max"]);
       if (v) ov.defaultThinkingLevel = v;
     } else if (pick.startsWith("Vision")) {
       const v = await ctx.ui.select(`${id} - vision (image input)`, ["on", "off"]);
@@ -1153,11 +1269,25 @@ export default async function (pi: ExtensionAPI): Promise<void> {
   if (creds?.baseUrl) activeBaseUrl = String(creds.baseUrl).replace(/\/+$/, "");
   if (creds?.apiKey) activeApiKey = creds.apiKey;
 
-  registerProviderNow(pi, await buildModels(activeApiKey, activeBaseUrl), activeBaseUrl);
+  registerProviderNow(pi, await buildWorkingModels(activeApiKey, activeBaseUrl, false), activeBaseUrl);
 
-  // Default thinking level (medium) on selection and at startup.
-  pi.on("model_select", (event: any) => applyThinkingDefault(pi, event?.model));
-  pi.on("session_start", (_event: any, ctx: any) => applyThinkingDefault(pi, ctx?.model));
+  // No recent health check: run it in the background (interactive only, so
+  // `pi -p` doesn't wait on it), then re-register with the working models.
+  pi.on("session_start", (event: any, ctx: any) => {
+    if (event?.reason !== "startup" || !ctx?.hasUI || !activeApiKey || loadProbe(activeBaseUrl)) return;
+    const baseUrl = activeBaseUrl;
+    buildWorkingModels(activeApiKey, baseUrl, true)
+      .then((models) => {
+        if (baseUrl === activeBaseUrl) registerProviderNow(pi, models, baseUrl);
+      })
+      .catch(() => {});
+  });
+
+  // Only when the user switches model; on startup/restore keep Pi's saved
+  // thinking level (or --thinking) so the chosen effort sticks.
+  pi.on("model_select", (event: any) => {
+    if (event?.source !== "restore") applyThinkingDefault(pi, event?.model);
+  });
 
   // Named convenience command; the same flow is also reachable via `/login`.
   pi.registerCommand("uva-login", {
@@ -1219,7 +1349,7 @@ export default async function (pi: ExtensionAPI): Promise<void> {
           }
           try {
             saveOverrides(draft);
-            registerProviderNow(pi, await buildModels(activeApiKey, activeBaseUrl), activeBaseUrl);
+            registerProviderNow(pi, await buildWorkingModels(activeApiKey, activeBaseUrl, false), activeBaseUrl);
             if (ctx.model) applyThinkingDefault(pi, ctx.model);
             ctx.ui.notify(`Saved & applied overrides for ${Object.keys(draft).length} model(s).`, "info");
           } catch (err) {
