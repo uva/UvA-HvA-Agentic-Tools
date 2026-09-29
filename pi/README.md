@@ -11,83 +11,89 @@
 
 A [Pi](https://pi.dev) coding-agent provider extension for the University of
 Amsterdam / Amsterdam University of Applied Sciences LiteLLM proxies
-(`https://llmproxy.uva.nl/v1`, `https://llmproxy.hva.nl/v1`).
+(https://llmproxy.uva.nl/v1, https://llmproxy.hva.nl/v1).
 
 Get every UvA/HvA model working in Pi in under a minute, without editing Pi's config
-files. Load the extension, run `/login`, pick your proxy, paste your API key, and
+files. Load the extension, run /login, pick your proxy, paste your API key, and
 it auto-discovers all available models so you can select one straight from
-`/model`. Your base URL and key are saved, so the next launch just reconnects.
+/model. Your base URL and key are saved, so the next launch just reconnects.
 Reasoning models come pre-tuned (thinking on at medium),
 and tool-heavy agent turns that would otherwise silently come back empty on this
 proxy just work. That's the whole setup; everything below is optional detail.
 
-## Quick setup: copy this prompt
+## Quick setup
 
-Paste this entire block into a coding assistant that can run terminal commands
-on your computer. It sets up Pi and [current extension set](#my-current-pi-harness);
-you enter credentials yourself afterward. If you only want the UvA/HvA provider,
-use the [manual install](#install).
+Copy-paste these commands in a terminal. They install Node.js, Pi and the
+[recommended extension set](#pi-harness-setup). If you only want the UvA/HvA
+provider, use the [manual install](#install) instead.
 
-```text
-Set up Pi with the following extension set on my computer.
+### 1. Install Node.js (skip if node --version shows 22.19 or newer)
 
-1. Detect my OS, shell, Node.js/npm and existing Pi installation. Use Node.js
-   22.19.0 or newer supported LTS, as required by this extension set. If a
-   prerequisite is missing, explain the platform-appropriate installation;
-   ask before using administrator privileges or replacing an existing runtime.
-   If Pi is missing, install it with:
-   npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-   Preserve an existing Pi installation rather than replacing it blindly.
+Windows (PowerShell):
 
-2. Inspect `pi list`. Back up existing Pi settings before making changes.
-   Run `pi install <source>` once for each missing source below, at user scope.
-   Preserve unrelated settings, existing packages, filters, credentials and
-   pinned versions. Recognize an already-installed version of the same package;
-   do not add duplicate entries or silently upgrade it. Do not uninstall other
-   extensions. Install only this list:
-
-   npm:pi-mcp-adapter
-   npm:pi-simplify
-   npm:pi-hermes-memory
-   npm:@juicesharp/rpiv-voice
-   npm:pi-markdown-preview
-   npm:opencode-codebase-index
-   npm:pi-ask-user
-   npm:pi-btw
-   npm:@gotgenes/pi-anthropic-auth
-   npm:pi-subagents
-   npm:awesome-pi-themes
-   npm:pi-goal-x
-   npm:pi-advisor-flow
-   npm:pi-uva-hva
-   npm:@narumitw/pi-plan-mode
-   npm:@dietrichgebert/ponytail
-
-3. Check installation output and each package's documented prerequisites.
-   If dependency install scripts are blocked, report the affected packages and
-   review their documented setup rather than enabling all scripts globally.
-   Do not configure external MCP servers, activate the microphone, start a
-   project index, or authenticate optional providers as part of installation.
-   Never ask me to paste API keys into this conversation or put them in a repo.
-
-4. Verify `pi --version` and `pi list`, then tell me to restart Pi and check for
-   extension-loading errors. Walk me through `/login`, choosing "UvA / HvA
-   proxy", selecting my university, and entering my own API key privately.
-   Then use `/model` to select an available model. Other providers are optional
-   and need their own credentials; installing them does not grant access.
-
-5. For the UvA/HvA model I choose, if it supports roughly one million context
-   tokens, guide me through `/configure-models`: set Context window to 272000,
-   leave max output and other capabilities unchanged, then Save & apply changes.
-   This is the recommended working context, not an output-token setting or an
-   increase for smaller models. Use a real discovered model ID, never a guessed
-   one. If login/model selection is still pending, report this step as pending.
-
-Finish with installed package versions, any errors or optional setup still
-needed, and the remaining login/model steps. Do not claim the complete harness
-is functional merely because the package installation succeeded. If you cannot
-run commands, give me equivalent commands for my OS instead.
+```powershell
+winget install OpenJS.NodeJS.LTS
 ```
+
+Close and reopen PowerShell afterwards so node and npm are found.
+
+Linux / macOS (any distro, no admin rights needed, uses
+[nvm](https://github.com/nvm-sh/nvm)):
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+. "$HOME/.nvm/nvm.sh"
+nvm install --lts
+```
+
+### 2. Install Pi
+
+Same command on every platform:
+
+```bash
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+pi --version
+```
+
+> Windows: if PowerShell says "running scripts is disabled on this system", run
+> Set-ExecutionPolicy -Scope CurrentUser RemoteSigned once and try again.
+
+### 3. Install the extensions
+
+Windows (PowerShell):
+
+```powershell
+$pkgs = "pi-mcp-adapter","pi-simplify","pi-hermes-memory","@juicesharp/rpiv-voice",
+  "pi-markdown-preview","opencode-codebase-index","pi-ask-user","pi-btw",
+  "@gotgenes/pi-anthropic-auth","pi-subagents","awesome-pi-themes","pi-goal-x",
+  "pi-advisor-flow","pi-uva-hva","@narumitw/pi-plan-mode","@dietrichgebert/ponytail"
+foreach ($p in $pkgs) { pi install "npm:$p" }
+pi list
+```
+
+Linux / macOS:
+
+```bash
+for p in pi-mcp-adapter pi-simplify pi-hermes-memory @juicesharp/rpiv-voice \
+  pi-markdown-preview opencode-codebase-index pi-ask-user pi-btw \
+  @gotgenes/pi-anthropic-auth pi-subagents awesome-pi-themes pi-goal-x \
+  pi-advisor-flow pi-uva-hva @narumitw/pi-plan-mode @dietrichgebert/ponytail
+do pi install "npm:$p"; done
+pi list
+```
+
+Already-installed packages are fine to re-run. Want only some? Remove them from
+the list; only pi-uva-hva is needed for the university proxy.
+
+### 4. Log in and pick a model
+
+Start pi, then:
+
+1. Run /login, choose UvA / HvA proxy, pick your university and paste
+   your own API key (never paste it into a chat or a repo).
+2. Run /model and select a model.
+3. Optional: for a model with a ~1M-token context, see the
+   [recommended context window](#recommended-context-window-for-1m-models).
 
 This is a package-selection snapshot, not a version-locked environment. New
 installs resolve the published package versions available at installation time.
@@ -107,7 +113,7 @@ Pick one:
   ```bash
   pi install npm:pi-uva-hva
   ```
-- From a local clone: clone the repo and point at the `pi/` folder instead:
+- From a local clone: clone the repo and point at the pi/ folder instead:
   ```jsonc
   {
     "packages": [
@@ -116,7 +122,7 @@ Pick one:
   }
   ```
 
-### 2. Connect with `/login`
+### 2. Connect with /login
 
 Start Pi and run:
 
@@ -126,11 +132,11 @@ Start Pi and run:
 
 Choose "UvA / HvA proxy", pick a base URL (UvA / HvA / custom), and paste
 your API key. The extension discovers every model and saves your base URL + key
-to `~/.pi/agent/openai-responses-uva.json`, so the next launch reconnects with
-nothing re-entered. `/uva-login` runs the same flow.
+to ~/.pi/agent/openai-responses-uva.json, so the next launch reconnects with
+nothing re-entered. /uva-login runs the same flow.
 
-> Prefer env vars? Set `UVA_API_KEY` (and optionally `UVA_BASE_URL`) instead of
-> `/login`. Both work.
+> Prefer env vars? Set UVA_API_KEY (and optionally UVA_BASE_URL) instead of
+> /login. Both work.
 
 ### 3. Pick a model
 
@@ -139,7 +145,7 @@ nothing re-entered. `/uva-login` runs the same flow.
 ```
 
 Reasoning models default to thinking ON at medium. You can raise or lower a
-model's default in `/configure-models`, or set the level per run from the CLI:
+model's default in /configure-models, or set the level per run from the CLI:
 
 ```bash
 pi --provider uva --model gpt-5.6-sol --thinking high -p "hello"
@@ -147,31 +153,31 @@ pi --provider uva --model gpt-5.6-sol --thinking high -p "hello"
 
 ## Configuration
 
-`/login` is the easy path; everything is also configurable via environment
+/login is the easy path; everything is also configurable via environment
 variables (all optional):
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `UVA_API_KEY` | - | API key, if you prefer env over `/login`. |
-| `UVA_BASE_URL` | `https://llmproxy.uva.nl/v1` | Proxy base URL (must end at the `/v1` root). |
-| `UVA_PROVIDER_ID` | `uva` | Provider id shown in `/model` and `--provider`. |
-| `UVA_CREDENTIALS_FILE` | `~/.pi/agent/openai-responses-uva.json` | Override the saved-credentials path. |
-| `UVA_NO_AUTO_THINKING` | - | Set to disable the medium thinking default. |
-| `UVA_MODEL_OVERRIDES_FILE` | - | Path to a JSON file overriding per-model capabilities (below). |
+| UVA_API_KEY | - | API key, if you prefer env over /login. |
+| UVA_BASE_URL | https://llmproxy.uva.nl/v1 | Proxy base URL (must end at the /v1 root). |
+| UVA_PROVIDER_ID | uva | Provider id shown in /model and --provider. |
+| UVA_CREDENTIALS_FILE | ~/.pi/agent/openai-responses-uva.json | Override the saved-credentials path. |
+| UVA_NO_AUTO_THINKING | - | Set to disable the medium thinking default. |
+| UVA_MODEL_OVERRIDES_FILE | - | Path to a JSON file overriding per-model capabilities (below). |
 
 ### Per-model overrides
 
 Capabilities come from the proxy metadata (with a name-table fallback). To pin a
 value yourself there are two ways.
 
-Interactive menu (easiest): run `/configure-models`. Pick a model, then set
+Interactive menu (easiest): run /configure-models. Pick a model, then set
 its context window and max output (type the number), toggle reasoning on/off,
 and choose the default thinking level applied when that model is selected. Two
 options at the end, Save & apply changes and Discard & exit. Saved
-overrides are written to `~/.pi/agent/openai-responses-uva.models.json` and
+overrides are written to ~/.pi/agent/openai-responses-uva.models.json and
 applied live (and on every future launch).
 
-By hand: point `UVA_MODEL_OVERRIDES_FILE` at a JSON file (this overrides the
+By hand: point UVA_MODEL_OVERRIDES_FILE at a JSON file (this overrides the
 default path above):
 
 ```json
@@ -181,29 +187,36 @@ default path above):
 }
 ```
 
-The `defaultThinkingLevel` on `gpt-5.6-sol` above is just an example of pinning
-one model to `high`; by default every reasoning model starts at `medium`.
+The defaultThinkingLevel on gpt-5.6-sol above is just an example of pinning
+one model to high; by default every reasoning model starts at medium.
 
-Each key is a model id; each value may set any of `reasoning`,
-`defaultThinkingLevel` (`off`/`low`/`medium`/`high`), `input`, `contextWindow`,
-`maxTokens`, `vision`, `name`, `cost`, `thinkingLevelMap`.
+Each key is a model id; each value may set any of reasoning,
+defaultThinkingLevel (off/low/medium/high), input, contextWindow,
+maxTokens, vision, name, cost, thinkingLevelMap.
 
 ### Recommended context window for 1M models
 
-**I recommend a 272k (272,000-token) working context window when using a model
-that supports roughly one million context tokens.** This is my working-context
-preference, not a claim that the model's actual capacity is only 272k or that
-this setting guarantees a particular price or performance improvement.
+Some models can read about one million tokens at once. We cap them at 272k
+(272,000 tokens) in Pi, for two reasons:
 
-For this UvA/HvA provider, run `/configure-models`, select your model, set
-**Context window** to **272000**, then choose **Save & apply changes**. Leave
-**Max output tokens** and the other capabilities unchanged. This controls Pi's
-context accounting; it is not an output-token limit. Do not raise smaller
-models' context windows to 272k.
+1. Lower costs. In agentic work every step resends the whole conversation, so
+   a huge context gets expensive fast. A cap makes Pi compact the history
+   before it grows unnecessarily large.
+2. Better answers. Once the context gets very full, models noticeably get
+   worse: they miss details, forget instructions and make more mistakes (the
+   "dumb zone"). Staying under 272k keeps the model in the range where it
+   still works well.
+
+The model can still handle more; 272k is just the working limit we chose.
+
+To set it, run /configure-models in Pi, select your model, set Context window
+to 272000, then choose Save & apply changes. Leave Max output tokens and the
+other settings unchanged. Only do this for 1M models; don't raise smaller
+models to 272k.
 
 To configure it by hand, merge the following into
-`~/.pi/agent/openai-responses-uva.models.json` (or your
-`UVA_MODEL_OVERRIDES_FILE`), preserving all other models and settings:
+~/.pi/agent/openai-responses-uva.models.json (or your
+UVA_MODEL_OVERRIDES_FILE), preserving all other models and settings:
 
 ```json
 {
@@ -213,46 +226,46 @@ To configure it by hand, merge the following into
 
 Replace the placeholder with an actual model ID from your proxy. Restart Pi
 after a manual file edit; the interactive menu applies its changes live.
-`/configure-models` belongs to this provider, not to all Pi providers. For other
+/configure-models belongs to this provider, not to all Pi providers. For other
 providers, use their documented context override mechanism; Pi also supports
-per-provider `modelOverrides` in `~/.pi/agent/models.json`. A
-`contextWindow` field in the general `settings.json` is not the equivalent.
+per-provider modelOverrides in ~/.pi/agent/models.json. A
+contextWindow field in the general settings.json is not the equivalent.
 
 ## How it works
 
 For each turn the custom stream handler:
 
-1. Lets Pi's pristine built-in `openai-responses` handler build the exact
+1. Lets Pi's pristine built-in openai-responses handler build the exact
    request params (full message + tool conversion, reasoning, caching) via an
-   `onPayload` hook that captures the params and throws before the network
+   onPayload hook that captures the params and throws before the network
    call, so nothing extra is billed.
 2. Reissues the request itself and synthesizes Pi's content events
-   (`text` / `thinking` / `toolCall`), reconciling the incremental SSE events
-   with the terminal `response.output[]` by item id so a collapsed tool call is
+   (text / thinking / toolCall), reconciling the incremental SSE events
+   with the terminal response.output[] by item id so a collapsed tool call is
    never lost. Tool-call ids and signatures are preserved for multi-turn replay.
 
 Two dispatch paths keep it reliable:
 
-- Non-reasoning turns stream (`stream:true`): bytes flow, so the nginx
+- Non-reasoning turns stream (stream:true): bytes flow, so the nginx
   gateway read-timeout keeps resetting and output is token-by-token.
-- Reasoning turns use background + poll (`background:true` +
-  `GET /responses/{id}`): the model can buffer its whole reasoning phase with
+- Reasoning turns use background + poll (background:true +
+  GET /responses/{id}): the model can buffer its whole reasoning phase with
   zero interim bytes without ever tripping a 504, because each request is short.
   A streaming turn that still hits a gateway 5xx before any output falls back to
   this path automatically.
 
-Params incompatible with non-OpenAI backends (`prompt_cache_key` on
+Params incompatible with non-OpenAI backends (prompt_cache_key on
 Bedrock/Vertex) are stripped per-model.
 
 ### Robust to model changes
 
 The UvA/HvA line-up changes often, so nothing about specific models is
 hard-coded. On connect the extension reads the proxy's own
-`/model_group/info` and derives each model's context window, max output,
+/model_group/info and derives each model's context window, max output,
 reasoning/vision support, cost, and backend directly from it, then decides the
-endpoint from the backend (`azure`/`bedrock` speak the Responses API;
-open-weight `openai`/vLLM models use chat-completions). If that metadata
-endpoint is ever unavailable it falls back to `/v1/models` plus a researched
+endpoint from the backend (azure/bedrock speak the Responses API;
+open-weight openai/vLLM models use chat-completions). If that metadata
+endpoint is ever unavailable it falls back to /v1/models plus a researched
 name table, and if a model is still mis-routed, a Responses turn that 404s is
 self-healed at runtime (retried on chat-completions and remembered). So even
 if every current model is replaced with new ones, discovery, capabilities, and
@@ -266,26 +279,25 @@ Non-reasoning turns stream normally.
 
 ## Reasoning models
 
-Reasoning is enabled per model from the proxy metadata (`supports_reasoning` or a
-`reasoning_effort` parameter), with the name table as a fallback, but only on the
-Responses route (chat-completions rejects `reasoning_effort` alongside tools).
+Reasoning is enabled per model from the proxy metadata (supports_reasoning or a
+reasoning_effort parameter), with the name table as a fallback, but only on the
+Responses route (chat-completions rejects reasoning_effort alongside tools).
 Reasoning models default to thinking ON at medium (disable with
-`UVA_NO_AUTO_THINKING=1`). Override any model's capabilities, including its
-default thinking level, per-id via `UVA_MODEL_OVERRIDES_FILE` or
-`/configure-models`.
+UVA_NO_AUTO_THINKING=1). Override any model's capabilities, including its
+default thinking level, per-id via UVA_MODEL_OVERRIDES_FILE or
+/configure-models.
 
 ## Compatibility
 
-- Pi coding-agent with the `@earendil-works/pi-ai` runtime (verified on 0.80.x).
-- Imports only the extension-facing `@earendil-works/pi-ai` surface, so it keeps
-  working across Pi updates (it does not patch `node_modules`).
+- Pi coding-agent with the @earendil-works/pi-ai runtime (verified on 0.80.x).
+- Imports only the extension-facing @earendil-works/pi-ai surface, so it keeps
+  working across Pi updates (it does not patch node_modules).
 
 ## Pi harness setup
 
 This is a description of a recommended setup, not a
 requirement to install everything just to use the university proxy. The
-[copy-paste setup prompt](#quick-setup-copy-this-prompt) contains the full
-installation list.
+[quick setup](#quick-setup) contains the install commands.
 
 ### Context, memory & codebase tools
 

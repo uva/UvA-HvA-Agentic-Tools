@@ -34,14 +34,15 @@ beyond the tool's own secret storage or an environment variable you control.
 | **Factory Droid** | BYOK custom models | Terminal agent, per-model endpoint control | [factory-droid/](factory-droid/README.md) |
 | **Odysseus** | Self-hosted, OpenAI-compatible provider | A full self-hosted AI workspace | [odysseus/](odysseus/README.md) |
 
-For Pi, use the **[copy-paste setup prompt](pi/README.md#quick-setup-copy-this-prompt)**
-to install Pi and [the extensions in my current development harness](pi/README.md#my-current-pi-harness).
-If you only need the university provider, run `pi install npm:pi-uva-hva`;
+For Pi, follow the [quick setup](pi/README.md#quick-setup) (copy-paste
+commands for Windows and Linux/macOS) to install Pi and
+[the extensions in my current development harness](pi/README.md#pi-harness-setup).
+If you only need the university provider, run pi install npm:pi-uva-hva;
 see the [manual setup](pi/README.md#install) for login instructions.
 
-**My context recommendation:** when using a model with roughly a **1M-token
-context window**, configure a **272k (272,000-token) working context** in Pi.
-See [the model-specific configuration steps](pi/README.md#recommended-context-window-for-1m-models).
+For models with a 1M-token context window, we cap the context at 272k tokens in
+Pi. This keeps agentic work cheaper and keeps the model out of the range where
+its answers noticeably get worse. See [why and how to set it](pi/README.md#recommended-context-window-for-1m-models).
 This is a working-context preference, not an output-token limit.
 
 Any other tool that speaks the OpenAI or Anthropic API can point at the proxy
