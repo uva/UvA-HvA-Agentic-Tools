@@ -40,9 +40,9 @@ plus key (Continue, Cline, Aider, custom scripts, and so on).
            "apiKey": "{env:UVA_API_KEY}"
          },
          "models": {
-           "gpt-4o": { "name": "GPT-4o (UvA)" },
-           "claude-sonnet-4.5": { "name": "Claude Sonnet 4.5 (UvA)" },
-           "gpt-5.6-sol": { "name": "GPT-5.6 Sol (UvA)" }
+           "gpt-6-luna": { "name": "GPT-6 Luna (UvA/HvA)" }
+           "claude-sonnet-5.5": { "name": "Claude Sonnet 5.5 (UvA/HvA)" },
+           "gpt-6.1-sol": { "name": "GPT-6.1 Sol (UvA/HvA)" }
          }
        }
      }
