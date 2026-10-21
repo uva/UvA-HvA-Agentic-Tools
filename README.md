@@ -40,9 +40,8 @@ commands for Windows and Linux/macOS) to install Pi and
 If you only need the university provider, run pi install npm:pi-uva-hva;
 see the [manual setup](pi/README.md#install) for login instructions.
 
-For models with a 1M-token context window, we cap the context at 272k tokens in
-Pi. This keeps agentic work cheaper and keeps the model out of the range where
-its answers noticeably get worse. See [why and how to set it](pi/README.md#recommended-context-window-for-1m-models).
+For models with a 1M-token context window, we recommend to cap the context at 272k tokens. This keeps agentic work cheaper and keeps the model out of the range where
+its answers noticeably get worse.
 This is a working-context preference, not an output-token limit.
 
 Any other tool that speaks the OpenAI or Anthropic API can point at the proxy
@@ -66,7 +65,7 @@ Windows (PowerShell):
   -Headers @{ Authorization = "Bearer YOUR_KEY" }).data.id
 ```
 
-Broadly: OpenAI GPT (`gpt-4o`, `gpt-4.1`, `gpt-5.x`), Anthropic Claude
+Broadly: OpenAI GPT (`gpt-6.1-sol`, `gpt-6.1-luna`, `gpt-5.x`), Anthropic Claude
 (`claude-sonnet`, `claude-opus`, `claude-haiku`), and open-weight models
 (`gpt-oss`, `Qwen`, `mistral`). Reasoning models (`gpt-5.x`, `o*`, Claude) accept
 a thinking / `reasoning_effort` control.
