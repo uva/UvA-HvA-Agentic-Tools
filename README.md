@@ -29,6 +29,7 @@ beyond the tool's own secret storage or an environment variable you control.
 | Tool | How it connects | Best for | Guide |
 | --- | --- | --- | --- |
 | **Claude Code** | Native Anthropic endpoint, env vars, zero config files | Fastest setup; Claude models | [claude-code/](claude-code/README.md) |
+| **Claude Code in your terminal** | Step-by-step install, PATH fix, same env vars | First-time setup, or `claude` is not recognized | [claude-code/terminal.md](claude-code/terminal.md) |
 | **Pi** | Provider extension (handles every quirk) | All models + reasoning, terminal-native | [pi/](pi/README.md) |
 | **VS Code (Copilot Chat)** | LiteLLM provider extension | In-editor chat inside the IDE you already use | [vscode/](vscode/README.md) |
 | **OpenCode** | OpenAI-compatible provider | Terminal agent, config-file driven | [opencode/](opencode/README.md) |
