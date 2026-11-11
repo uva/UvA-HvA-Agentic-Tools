@@ -12,6 +12,10 @@ proxy: see [9router.md](./9router.md). You can also use [Pi](../pi/README.md) or
 
 ## Setup
 
+Claude Code not installed yet, or does your terminal say `claude` is not
+recognized? Follow [terminal.md](./terminal.md) first. It covers installing,
+fixing the PATH on Windows and using Claude Code from a plain terminal.
+
 Set two environment variables, then run `claude` as usual.
 
 macOS / Linux (add to `~/.bashrc`, `~/.zshrc`, or `~/.profile`):
