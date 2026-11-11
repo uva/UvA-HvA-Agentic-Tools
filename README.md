@@ -13,7 +13,8 @@ use, plus a ready-made Pi extension.
 
 ## Get an API key
 
-You need a key for the proxy before anything below works. 
+You need a key for the proxy before anything below works.
+
 HvA: https://aichat.hva.nl/requestapikey
 UvA: https://aichat.uva.nl/requestapikey
 
