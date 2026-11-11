@@ -13,7 +13,7 @@ use, plus a ready-made Pi extension.
 
 ## Get an API key
 
-You need a key for the proxy before anything below works.
+You need a key for the proxy before anything below works. See: https://aichat.hva.nl/requestapikey
 
 - Base URLs: `https://llmproxy.uva.nl` (UvA) or `https://llmproxy.hva.nl` (HvA)
 - Getting a key: request one from your faculty IT / the proxy administrators.
