@@ -94,6 +94,9 @@ The per-tool guides note where this matters.
 .
 ├── README.md               this landing page
 ├── claude-code/            Claude Code (native Anthropic endpoint)
+│   ├── README.md           proxy setup
+│   ├── terminal.md         install and use it from a plain terminal
+│   └── 9router.md          GPT / Qwen models via a translation proxy
 ├── vscode/                 VS Code Copilot Chat (LiteLLM extension)
 ├── opencode/               OpenCode + generic OpenAI-compatible pattern
 ├── aider/                  Aider (terminal pair-programming)
