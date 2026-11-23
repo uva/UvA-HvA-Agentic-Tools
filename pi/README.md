@@ -85,6 +85,15 @@ pi list
 Already-installed packages are fine to re-run. Want only some? Remove them from
 the list; only pi-uva-hva is needed for the university proxy.
 
+Optional, not in the list above because of the account risk described in
+[Providers](#providers):
+
+```bash
+pi install npm:pi-antigravity
+```
+
+Optional: [public skills](#skills) and [MCP servers](#mcp-servers).
+
 ### 4. Log in and pick a model
 
 Start pi, then:
@@ -331,6 +340,7 @@ requirement to install everything just to use the university proxy. The
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
 | [@gotgenes/pi-anthropic-auth](https://www.npmjs.com/package/@gotgenes/pi-anthropic-auth) | Anthropic OAuth compatibility. |
+| [pi-antigravity](https://www.npmjs.com/package/pi-antigravity) | Google Antigravity models (Gemini and others) via Google sign-in, plus Google Search grounding, URL reading and image generation tools. Unofficial: Google's terms forbid third-party access to consumer Antigravity accounts and accounts have been suspended for it. Use at your own risk, never with your university Google account. |
 
 ### Interface & convenience
 
@@ -340,6 +350,59 @@ requirement to install everything just to use the university proxy. The
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
 | [pi-btw](https://www.npmjs.com/package/pi-btw) | Side conversations without interrupting the main task. |
 | [awesome-pi-themes](https://www.npmjs.com/package/awesome-pi-themes) | Additional terminal themes. |
+
+### Skills
+
+Skills are reusable instructions the agent loads when a task matches. We use
+the public [mattpocock/skills](https://github.com/mattpocock/skills) set (TDD,
+bug diagnosis, code review, PR writing, specs and tickets, grilling a plan,
+prototyping, and more). Install them for Pi with the
+[skills CLI](https://www.npmjs.com/package/skills) (same command on every
+platform):
+
+```bash
+npx skills add mattpocock/skills -g -a pi -s '*' -y
+```
+
+They land in ~/.agents/skills, which Pi reads on start. Update later with
+npx skills update -g. Skills run with the agent's permissions; read them
+before use.
+
+### MCP servers
+
+Public MCP servers we use through pi-mcp-adapter. Merge them into the
+mcpServers of ~/.pi/agent/mcp-adapter.json (all projects; create the file if
+it does not exist), then restart Pi or run /reload:
+
+```json
+{
+  "mcpServers": {
+    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest", "--headless"] },
+    "deepwiki": { "url": "https://mcp.deepwiki.com/mcp" },
+    "context7": { "url": "https://mcp.context7.com/mcp" },
+    "parallel-search": { "url": "https://search.parallel.ai/mcp", "directTools": true },
+    "github": { "url": "https://api.githubcopilot.com/mcp", "auth": "bearer", "bearerToken": "!gh auth token" },
+    "shadcn": { "command": "npx", "args": ["-y", "shadcn@latest", "mcp"] },
+    "ui-layouts": { "command": "npx", "args": ["-y", "@ui-layouts/mcp@latest"] },
+    "lazyweb": { "url": "https://www.lazyweb.com/mcp/public" },
+    "avalonia-docs": { "url": "https://docs-mcp.avaloniaui.net/mcp" }
+  }
+}
+```
+
+| Server | description |
+| --- | --- |
+| [playwright](https://github.com/microsoft/playwright-mcp) | Drive a headless browser to test and inspect web pages. |
+| [deepwiki](https://deepwiki.com) | Ask questions about public GitHub repositories. |
+| [context7](https://context7.com) | Up-to-date library and framework documentation. |
+| [parallel-search](https://parallel.ai) | Web search and page fetching for agents. |
+| [github](https://github.com/github/github-mcp-server) | Issues, pull requests and code on GitHub. Needs the [GitHub CLI](https://cli.github.com) logged in (gh auth login); the token is read at connect time, never stored in the file. |
+| [shadcn](https://ui.shadcn.com/docs/mcp) | Browse and add shadcn/ui components. |
+| [ui-layouts](https://www.ui-layouts.com) | UI layout and component examples. |
+| [lazyweb](https://www.lazyweb.com) | Real-app UI design references. |
+| [avalonia-docs](https://docs.avaloniaui.net) | Avalonia UI documentation (only for Avalonia/.NET projects). |
+
+Keep only the ones you need: every server adds tools the model has to read.
 
 ## License
 
