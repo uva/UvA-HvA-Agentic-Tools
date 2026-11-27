@@ -60,7 +60,7 @@ function handle(req, res, body) {
     }
     if (body?.background && body.model === "gpt-6.2-sol") return res.end(JSON.stringify({ ...completedResponse(), id: undefined }));
     if (body?.background) return res.end(JSON.stringify({ id: "resp_bg_1", object: "response", status: "queued" }));
-    // The proxy collapses tool turns: only the terminal event carries the output.
+    // The proxy collapses tool turns: only the terminal event has output.
     return sse(res, [{ type: "response.completed", response: completedResponse("resp_stream_1") }]);
   }
   if (req.method === "GET" && path === "/v1/responses/resp_bedrock_1") {
@@ -235,17 +235,15 @@ test("a saved login alone is enough", async () => {
   assert.equal(posts[0].auth, "Bearer sk-test-saved");
 });
 
-test("agent turns never carry OPENAI_API_KEY", async () => {
-  const env = {
-    UVA_API_KEY: undefined,
-    UVA_CREDENTIALS_FILE: join(tmp, "missing.json"),
-    UVA_BASE_URL: baseUrl,
-    OPENAI_API_KEY: "sk-test-openai",
-  };
+test("a saved key with $ and ! is sent as is", async () => {
+  writeFileSync(join(tmp, "special.json"), JSON.stringify({ baseUrl, apiKey: "!sk-$x$!y" }));
   const n = requests.length;
-  await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
-  const turns = since(n).filter((r) => r.method === "POST" && /^\/v1\/(responses|chat\/completions)$/.test(r.path));
-  assert.ok(!turns.some((r) => r.auth?.includes("sk-test-openai")), JSON.stringify(turns.map((r) => r.auth)));
+  const env = { UVA_API_KEY: undefined, UVA_CREDENTIALS_FILE: join(tmp, "special.json") };
+  const { code, stdout, stderr } = await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
+  assert.equal(code, 0, stdout + stderr);
+  const posts = since(n).filter((r) => r.method === "POST" && r.path === "/v1/responses");
+  assert.equal(posts.length, 1);
+  assert.equal(posts[0].auth, "Bearer !sk-$x$!y");
 });
 
 test("an OpenAI key alone never reaches the proxy", async () => {
@@ -282,6 +280,7 @@ test("lists the fallback ids when discovery fails", async () => {
   const { code, stdout, stderr } = await runPi(["--list-models", "uva"], { UVA_CREDENTIALS_FILE: join(tmp, "closed.json"), UVA_BASE_URL: closed });
   assert.equal(code, 0, stderr);
   assert.ok(/\bgpt-6\.1-sol\b/.test(stdout), stdout + stderr);
+  assert.ok(!/\bgpt-5\.5\b/.test(stdout), stdout);
 });
 
 after(() => {

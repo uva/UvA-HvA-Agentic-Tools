@@ -50,7 +50,7 @@
  * Run `/login` (choose "UvA / HvA proxy") or `/uva-login`: pick a base URL
  * (UvA / HvA / custom), paste your API key, and every model is auto-discovered.
  * The base URL + key are saved to openai-responses-uva.json in Pi's agent dir
- * so the next launch reconnects with nothing re-entered. Then pick a model via /models.
+ * so the next launch reconnects with nothing re-entered. Then use /models.
  *
  * Reasoning models default to thinking ON at medium
  * (set UVA_NO_AUTO_THINKING=1 to disable this; change any model's default in
@@ -122,7 +122,7 @@ function saveCreds(creds: { baseUrl: string; apiKey: string }): void {
 const DENY = /embedding|whisper|audio|tts|speech|dall|(^|[-_])image|document-ai|ocr|rerank|moderation|guard|stable-diffusion|batch/i;
 
 // Known-good fallback if /v1/models discovery fails.
-const FALLBACK_MODEL_IDS = ["gpt-6.2-astra", "gpt-6.2-sol", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.5", "gpt-4.1"];
+const FALLBACK_MODEL_IDS = ["gpt-6.2-astra", "gpt-6.2-sol", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-4.1"];
 
 // ---------------------------------------------------------------------------
 // FALLBACK capability table.
@@ -276,7 +276,7 @@ function buildModelDef(info: ModelInfo, overrides: Record<string, any>) {
 
 // Per-id capability overrides (context window, reasoning, default thinking
 // level, ...) written by the /configure-models menu. Path is
-// UVA_MODEL_OVERRIDES_FILE or openai-responses-uva.models.json in Pi's agent dir.
+// UVA_MODEL_OVERRIDES_FILE or <agent dir>/openai-responses-uva.models.json.
 function overridesFile(): string {
   if (process.env.UVA_MODEL_OVERRIDES_FILE) return process.env.UVA_MODEL_OVERRIDES_FILE;
   const { join } = require("node:path");
