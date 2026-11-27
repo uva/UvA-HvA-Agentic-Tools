@@ -2,7 +2,7 @@
 
 The [main Claude Code guide](./README.md) connects Claude Code straight to the
 proxy's Anthropic endpoint, which only serves Claude models. This guide adds a
-translation proxy so you can drive OpenAI models (like `gpt-5.6-luna`) and
+translation proxy so you can drive OpenAI models (like `gpt-6-luna`) and
 open-weight models (like `Qwen3.6`) from Claude Code too.
 
 ## Why this is needed
@@ -26,7 +26,7 @@ exactly this format translation (OpenAI to and from Anthropic). You point it at
 your UvA / HvA proxy, then point Claude Code at 9router.
 
 ```
-Claude Code  --(Anthropic /v1/messages)-->  9router  --(OpenAI /v1)-->  UvA proxy  -->  gpt-5.6-luna / Qwen3.6
+Claude Code  --(Anthropic /v1/messages)-->  9router  --(OpenAI /v1)-->  UvA proxy  -->  gpt-6-luna / Qwen3.6
 ```
 
 > 9router (MIT, runs locally) has many other features (free-tier pooling,
@@ -59,7 +59,7 @@ In the dashboard (`http://localhost:20128`):
    - **Base URL:** `https://llmproxy.uva.nl/v1` (or `https://llmproxy.hva.nl/v1`)
    - **API key:** your UvA / HvA proxy key
 3. Save. Note the **model id** 9router assigns to your models. It prefixes the
-   provider, so a model shows up as something like `uva/gpt-5.6-luna` or
+   provider, so a model shows up as something like `uva/gpt-6-luna` or
    `uva/Qwen3.6` (the exact prefix is whatever you named the provider). You need
    this id in step 4.
 
@@ -110,11 +110,11 @@ Open a fresh terminal, then run Claude Code pinned to the 9router model id from
 step 2:
 
 ```bash
-export ANTHROPIC_MODEL="uva/gpt-5.6-luna"      # or uva/Qwen3.6, etc.
+export ANTHROPIC_MODEL="uva/gpt-6-luna"      # or uva/Qwen3.6, etc.
 claude
 ```
 
-You can also switch mid-session with `/model uva/gpt-5.6-luna`.
+You can also switch mid-session with `/model uva/gpt-6-luna`.
 
 ## Notes and limits
 

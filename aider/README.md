@@ -36,7 +36,7 @@ proxy is a natural fit.
    ```bash
    cd /your/project
    aider --model openai/gpt-4o
-   # or: aider --model openai/claude-sonnet-4.5
+   # or: aider --model openai/claude-sonnet-5.5
    ```
 
 ## Choosing a model
@@ -68,7 +68,7 @@ Aider has explicit reasoning controls (see
 [Reasoning models](https://aider.chat/docs/config/reasoning.html)):
 
 ```bash
-aider --model openai/gpt-5.6-sol --reasoning-effort high
+aider --model openai/gpt-6.2-sol --reasoning-effort high
 ```
 
 Aider edits code through its own diff formats rather than function-calling

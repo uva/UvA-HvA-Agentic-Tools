@@ -63,8 +63,8 @@ Note some GPT-5 models require `temperature: 1`:
 {
   "litellm-vscode-chat.models.parameters": {
     "gpt-5": { "temperature": 1 },
-    "gpt-5.6-sol": { "reasoning_effort": "high" },
-    "claude-sonnet-4.5": { "reasoning_effort": "medium" }
+    "gpt-6.2-sol": { "reasoning_effort": "high" },
+    "claude-sonnet-5.5": { "reasoning_effort": "medium" }
   }
 }
 ```

@@ -32,16 +32,16 @@ Based on the official
    {
      "customModels": [
        {
-         "model": "claude-sonnet-4.5",
-         "displayName": "Claude Sonnet 4.5 (UvA)",
+         "model": "claude-sonnet-5.5",
+         "displayName": "Claude Sonnet 5.5 (UvA)",
          "baseUrl": "https://llmproxy.uva.nl",
          "apiKey": "${UVA_API_KEY}",
          "provider": "anthropic",
-         "maxOutputTokens": 64000
+         "maxOutputTokens": 128000
        },
        {
-         "model": "gpt-5.6-sol",
-         "displayName": "GPT-5.6 Sol (UvA)",
+         "model": "gpt-6.2-sol",
+         "displayName": "GPT-6.2 Sol (UvA)",
          "baseUrl": "https://llmproxy.uva.nl/v1",
          "apiKey": "${UVA_API_KEY}",
          "provider": "openai",

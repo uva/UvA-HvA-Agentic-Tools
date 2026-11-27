@@ -38,7 +38,7 @@ Open a fresh terminal so the variables take effect, then:
 claude
 ```
 
-Pick a Claude model with `/model` (for example `claude-sonnet-4.5`). The proxy
+Pick a Claude model with `/model` (for example `claude-sonnet-5.5`). The proxy
 translates the Anthropic calls to its Bedrock backend for you.
 
 ## Choosing a model
@@ -53,7 +53,7 @@ curl -s https://llmproxy.uva.nl/v1/models \
 Then set it per session with `/model <id>`, or pin a default:
 
 ```bash
-export ANTHROPIC_MODEL="claude-sonnet-4.5"
+export ANTHROPIC_MODEL="claude-sonnet-5.5"
 ```
 
 ## Notes

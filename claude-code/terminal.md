@@ -115,7 +115,7 @@ claude
 
 The first time, Claude Code asks whether you trust the folder. After that you
 can type your question or task at the prompt. Pick a model with `/model`, for
-example `claude-sonnet-4.5`. See [Choosing a model](./README.md#choosing-a-model)
+example `claude-sonnet-5.5`. See [Choosing a model](./README.md#choosing-a-model)
 for how to list what your key can reach.
 
 ## 6. Day-to-day use
