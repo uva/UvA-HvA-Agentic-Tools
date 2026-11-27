@@ -64,12 +64,12 @@
  *   UVA_CREDENTIALS_FILE  Override the saved-credentials path.
  *   UVA_NO_AUTO_THINKING  Set to disable the medium thinking default.
  *
- * Only imports the aliased root "@earendil-works/pi-ai" (the extension-facing
- * compat surface), so it works under Pi's jiti extension loader.
+ * Only imports "@earendil-works/pi-ai/compat" (the extension-facing surface),
+ * so it works under Pi's jiti extension loader.
  */
 
 import { getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getApiProvider, createAssistantMessageEventStream, calculateCost } from "@earendil-works/pi-ai";
+import { getApiProvider, createAssistantMessageEventStream, calculateCost } from "@earendil-works/pi-ai/compat";
 
 const BASE_API = "openai-responses"; // pristine built-in handler we delegate to
 const CUSTOM_API = "openai-responses-uva"; // our fixed handler is registered under this
@@ -880,7 +880,20 @@ function chatDelegate(model: any, context: any, options: any): any {
       error: {
         role: "assistant",
         content: [],
+        api: model.api,
+        provider: model.provider,
+        model: model.id,
+        usage: {
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+          reasoning: 0,
+          totalTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
         stopReason: "error",
+        timestamp: Date.now(),
         errorMessage: "openai-responses-uva: openai-completions handler unavailable",
       },
     });
