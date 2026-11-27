@@ -54,8 +54,8 @@ plus key (Continue, Cline, Aider, custom scripts, and so on).
 
    For HvA, use `https://llmproxy.hva.nl/v1` and `{env:HVA_API_KEY}`.
 
-   OpenCode 2's [config schema](https://opencode.ai/config.json) marks
-   `provider` as deprecated in favour of `providers`, but still loads it, and
+   In OpenCode 2, the [config schema](https://opencode.ai/config.json) marks
+   `provider` as deprecated in favour of `providers`, but still loads it.
    OpenCode 1 reads only `provider`, so this block works in both.
 
 3. Run OpenCode and select a model from the `uva` provider with `/models`.

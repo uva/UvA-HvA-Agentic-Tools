@@ -332,11 +332,12 @@ requirement to install everything just to use the university proxy. The
 
 ### Skills
 
-Skills are reusable instructions the agent loads when a task matches. We
-recommend all of Matt Pocock's [skills](https://github.com/mattpocock/skills):
-they help with planning, TDD, debugging, review, and specs and tickets, for
-example grill-with-docs, tdd, diagnosing-bugs, code-review, to-spec and
-to-tickets. Install all of them globally for Pi with the
+Skills are reusable instructions that the agent loads when a task matches. We
+recommend installing all of Matt Pocock's
+[skills](https://github.com/mattpocock/skills). They help with planning, TDD,
+debugging, review, and writing specs and tickets: for example
+grill-with-docs, tdd, diagnosing-bugs, code-review, to-spec and to-tickets.
+Install all of them globally for Pi with the
 [skills CLI](https://www.npmjs.com/package/skills) (same command on every
 platform):
 
@@ -344,18 +345,19 @@ platform):
 npx skills@latest add mattpocock/skills -g -a pi -s '*' -y
 ```
 
-They land in ~/.agents/skills, which Pi reads on start. Run
-/skill:setup-matt-pocock-skills once per repo. Update later with
-npx skills@latest update -g, and re-run add to pick up new skills. Skills run
-with the agent's permissions; read them before use.
+They are saved in ~/.agents/skills, which Pi reads when it starts. Run
+/skill:setup-matt-pocock-skills once in each repo. To update later, run
+npx skills@latest update -g, and run the add command again to pick up new
+skills. Skills run with the agent's permissions, so read them before you use
+them.
 
 ### MCP servers
 
-Public MCP servers we use through Pi's built-in MCP support. Merge them into
-the mcpServers of ~/.pi/agent/mcp.json (all projects; create the file if it
-does not exist), check them with pi mcp list, then restart Pi or run /reload.
-If you still have pi-mcp-adapter installed, remove it: it replaces the
-built-in support, and Pi then ignores mcp.json.
+These are the public MCP servers we use through Pi's built-in MCP support.
+Merge them into the mcpServers of ~/.pi/agent/mcp.json (it applies to all
+projects; create the file if it does not exist). Check them with pi mcp list,
+then restart Pi or run /reload. If you still have pi-mcp-adapter installed,
+remove it: it replaces the built-in support, and Pi then ignores mcp.json.
 
 ```json
 {

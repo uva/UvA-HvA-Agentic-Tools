@@ -53,8 +53,8 @@ raise the request timeout so long generations aren't cut off client-side:
 }
 ```
 
-Prompt caching for Claude makes Claude models cheaper and faster. It is on by
-default; `litellm-vscode-chat.chat.promptCaching` turns it off.
+Prompt caching makes Claude models cheaper and faster. It is on by default;
+set `litellm-vscode-chat.chat.promptCaching` to `false` to turn it off.
 
 Per-model parameters. Control reasoning effort or other options per model.
 Note some GPT-5 models require `temperature: 1`:
@@ -88,8 +88,8 @@ model info. To correct a limit, set it per model in
   lower the reasoning effort for that model via `models.parameters`.
 - Custom headers: if your gateway expects an extra header, add it under
   `headers` in the server's entry in `litellm-vscode-chat.servers` (User
-  settings only). Put a secret key in the entry's `auth` instead, which can
-  live in VS Code's secret storage.
+  settings only). A secret key belongs in the entry's `auth` instead, which
+  can be kept in VS Code's secret storage.
 
 ## Troubleshooting
 
