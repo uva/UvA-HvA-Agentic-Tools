@@ -110,8 +110,8 @@ Start pi, then:
 This is a package-selection snapshot, not a version-locked environment. New
 installs resolve the published package versions available at installation time.
 Extensions run with your account's permissions; review the packages before
-installing them. Workflows, subagents and advisors can make additional model
-calls, so check their routing and cost settings before use.
+installing them. Some, such as pi-btw, make additional model calls, so check
+their routing and cost settings before use.
 
 ## Install
 
@@ -177,10 +177,10 @@ variables (all optional):
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| UVA_API_KEY | - | API key, if you prefer env over /login. |
+| UVA_API_KEY | - | API key, if you prefer env over /login. A saved /login wins when both exist. |
 | UVA_BASE_URL | https://llmproxy.uva.nl/v1 | Proxy base URL (must end at the /v1 root). |
 | UVA_PROVIDER_ID | uva | Provider id shown in /model and --provider. |
-| UVA_CREDENTIALS_FILE | <agent dir>/openai-responses-uva.json | Override the saved-credentials path. |
+| UVA_CREDENTIALS_FILE | `<agent dir>/openai-responses-uva.json` | Override the saved-credentials path. |
 | UVA_NO_AUTO_THINKING | - | Set to disable the medium thinking default. |
 | UVA_MODEL_OVERRIDES_FILE | - | Path to a JSON file overriding per-model capabilities (below). |
 
@@ -309,6 +309,7 @@ default thinking level, per-id via UVA_MODEL_OVERRIDES_FILE or
 ## Compatibility
 
 - Tested on Pi 1.7.0.
+- The offline tests (`npm test` in pi/) run on Linux and macOS only.
 - Imports only the extension-facing `@earendil-works/pi-ai/compat` entry, so it
   keeps working across Pi updates (it does not patch node_modules).
 
@@ -344,7 +345,7 @@ npx skills@latest add mattpocock/skills -g -a pi -s '*' -y
 ```
 
 They land in ~/.agents/skills, which Pi reads on start. Run
-/setup-matt-pocock-skills once per repo. Update later with
+/skill:setup-matt-pocock-skills once per repo. Update later with
 npx skills@latest update -g, and re-run add to pick up new skills. Skills run
 with the agent's permissions; read them before use.
 
@@ -384,7 +385,8 @@ built-in support, and Pi then ignores mcp.json.
 | [lazyweb](https://www.lazyweb.com) | Real-app UI design references. |
 | [avalonia-docs](https://docs.avaloniaui.net) | Avalonia UI documentation (only for Avalonia/.NET projects). |
 
-Keep only the ones you need: every server adds tools the model has to read.
+Keep only the ones you need: each one starts a process or connection and adds
+a line to the system prompt.
 
 ## License
 
