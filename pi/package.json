@@ -24,6 +24,10 @@
   "scripts": {
     "test": "node --test"
   },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
   "files": [
     "index.ts",
     "README.md",

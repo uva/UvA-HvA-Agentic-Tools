@@ -48,12 +48,25 @@ nvm install --lts
 
 ### 2. Install Pi
 
-Same command on every platform:
+Linux / macOS:
+
+```bash
+curl -fsSL https://pi.dev/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+powershell -c "irm https://pi.dev/install.ps1 | iex"
+```
+
+Or install it with npm, the same command on every platform:
 
 ```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi --version
 ```
+
+Check it with `pi --version`.
 
 > Windows: if PowerShell says "running scripts is disabled on this system", run
 > Set-ExecutionPolicy -Scope CurrentUser RemoteSigned once and try again.
@@ -305,9 +318,9 @@ default thinking level, per-id via UVA_MODEL_OVERRIDES_FILE or
 
 ## Compatibility
 
-- Pi coding-agent with the @earendil-works/pi-ai runtime (verified on 0.80.x).
-- Imports only the extension-facing @earendil-works/pi-ai surface, so it keeps
-  working across Pi updates (it does not patch node_modules).
+- Tested on Pi 1.7.0.
+- Imports only the extension-facing `@earendil-works/pi-ai/compat` entry, so it
+  keeps working across Pi updates (it does not patch node_modules).
 
 ## Pi harness setup
 
