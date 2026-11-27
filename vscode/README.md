@@ -9,7 +9,7 @@ proxy and adds them to the Copilot Chat model picker.
 
 ## Requirements
 
-- VS Code 1.108.0 or newer.
+- VS Code 1.136.0 or newer.
 - The GitHub Copilot Chat extension (VS Code's chat UI).
 - A proxy API key.
 
@@ -48,25 +48,20 @@ raise the request timeout so long generations aren't cut off client-side:
 
 ```json
 {
-  "litellm-vscode-chat.requestTimeout": 600000,
-  "litellm-vscode-chat.discoveryTimeout": 60000
+  "litellm-vscode-chat.chat.timeout": 600000,
+  "litellm-vscode-chat.discovery.timeout": 60000
 }
 ```
 
-Prompt caching for Claude. Cheaper and faster on Claude models:
-
-```json
-{
-  "litellm-vscode-chat.promptCaching.enabled": true
-}
-```
+Prompt caching for Claude makes Claude models cheaper and faster. It is on by
+default; `litellm-vscode-chat.chat.promptCaching` turns it off.
 
 Per-model parameters. Control reasoning effort or other options per model.
 Note some GPT-5 models require `temperature: 1`:
 
 ```json
 {
-  "litellm-vscode-chat.modelParameters": {
+  "litellm-vscode-chat.models.parameters": {
     "gpt-5": { "temperature": 1 },
     "gpt-5.6-sol": { "reasoning_effort": "high" },
     "claude-sonnet-4.5": { "reasoning_effort": "medium" }
@@ -75,8 +70,8 @@ Note some GPT-5 models require `temperature: 1`:
 ```
 
 The extension auto-reads context window and max-output limits from the proxy's
-model info; the `defaultContextLength` / `defaultMaxOutputTokens` settings are
-only fallbacks.
+model info. To correct a limit, set it per model in
+`litellm-vscode-chat.models.capabilities`.
 
 ## Notes and limits
 
@@ -89,10 +84,12 @@ only fallbacks.
   [Pi](../pi/README.md), which routes reasoning + tools through `/v1/responses`
   automatically.
 - Gateway timeouts: a very long reasoning turn can still hit a server-side
-  gateway timeout regardless of the client `requestTimeout`. If that happens,
-  lower the reasoning effort for that model via `modelParameters`.
-- Custom auth headers: if your gateway expects a non-standard header, set
-  `litellm-vscode-chat.headers` (User settings, so secrets aren't committed).
+  gateway timeout regardless of the client `chat.timeout`. If that happens,
+  lower the reasoning effort for that model via `models.parameters`.
+- Custom headers: if your gateway expects an extra header, add it under
+  `headers` in the server's entry in `litellm-vscode-chat.servers` (User
+  settings only). Put a secret key in the entry's `auth` instead, which can
+  live in VS Code's secret storage.
 
 ## Troubleshooting
 
