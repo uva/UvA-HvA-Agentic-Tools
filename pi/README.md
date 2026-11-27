@@ -167,7 +167,7 @@ Reasoning models default to thinking ON at medium. You can raise or lower a
 model's default in /configure-models, or set the level per run from the CLI:
 
 ```bash
-pi --provider uva --model gpt-5.6-sol --thinking high -p "hello"
+pi --provider uva --model gpt-6.1-sol --thinking high -p "hello"
 ```
 
 ## Configuration
@@ -201,12 +201,12 @@ default path above):
 
 ```json
 {
-  "gpt-5.6-sol":    { "contextWindow": 272000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
+  "gpt-6.1-sol":    { "contextWindow": 272000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
   "some-new-model": { "reasoning": false, "input": ["text", "image"], "contextWindow": 200000, "maxTokens": 32000 }
 }
 ```
 
-The defaultThinkingLevel on gpt-5.6-sol above is just an example of pinning
+The defaultThinkingLevel on gpt-6.1-sol above is just an example of pinning
 one model to high; by default every reasoning model starts at medium.
 
 Each key is a model id; each value may set any of reasoning,

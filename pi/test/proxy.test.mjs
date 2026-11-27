@@ -221,6 +221,17 @@ test("the saved login is read from --agent-dir", async () => {
   assert.ok(!existsSync(join(home, ".pi")), "wrote under $HOME/.pi");
 });
 
+test("lists the fallback ids when discovery fails", async () => {
+  const probe = http.createServer();
+  await new Promise((r) => probe.listen(0, "127.0.0.1", r));
+  const closed = `http://127.0.0.1:${probe.address().port}/v1`;
+  await new Promise((r) => probe.close(r));
+  writeFileSync(join(tmp, "closed.json"), JSON.stringify({ baseUrl: closed, apiKey: "sk-test-closed" }));
+  const { code, stdout, stderr } = await runPi(["--list-models", "uva"], { UVA_CREDENTIALS_FILE: join(tmp, "closed.json"), UVA_BASE_URL: closed });
+  assert.equal(code, 0, stderr);
+  assert.ok(/\bgpt-6\.1-sol\b/.test(stdout), stdout + stderr);
+});
+
 after(() => {
   const leaked = requests.filter((r) => r.auth?.includes("sk-test-openai"));
   assert.equal(leaked.length, 0, leaked.map((r) => `${r.method} ${r.path}`).join("\n"));

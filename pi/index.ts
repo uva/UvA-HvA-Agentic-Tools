@@ -122,7 +122,7 @@ function saveCreds(creds: { baseUrl: string; apiKey: string }): void {
 const DENY = /embedding|whisper|audio|tts|speech|dall|(^|[-_])image|document-ai|ocr|rerank|moderation|guard|stable-diffusion|batch/i;
 
 // Known-good fallback if /v1/models discovery fails.
-const FALLBACK_MODEL_IDS = ["gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.5", "gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o"];
+const FALLBACK_MODEL_IDS = ["gpt-6.2-astra", "gpt-6.2-sol", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.5", "gpt-4.1"];
 
 // ---------------------------------------------------------------------------
 // FALLBACK capability table.
