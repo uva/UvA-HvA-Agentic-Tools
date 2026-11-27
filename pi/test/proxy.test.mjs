@@ -39,7 +39,7 @@ function sse(res, events) {
 function handle(req, res, body) {
   const path = req.url.split("?")[0];
   if (req.method === "GET" && path === "/v1/models") {
-    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-6.1-sol", "gpt-35-turbo", "text-embedding-3"];
+    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-6.1-sol", "claude-sonnet-4.6", "gpt-35-turbo", "text-embedding-3"];
     return res.end(JSON.stringify({ object: "list", data: ids.map((id) => ({ id, object: "model" })) }));
   }
   if (path === "/model_group/info") {
@@ -52,9 +52,15 @@ function handle(req, res, body) {
       const message = "Unsupported value: 'none' is not supported with the 'gpt-6.1-sol-2026-09-29' model.";
       return res.end(JSON.stringify({ error: { message: `litellm.BadRequestError: AzureException BadRequestError - ${message}` } }));
     }
+    // Bedrock ignores background: it answers finished and cannot be polled.
+    if (body?.background && body.model.startsWith("claude")) return res.end(JSON.stringify(completedResponse("resp_bedrock_1")));
     if (body?.background) return res.end(JSON.stringify({ id: "resp_bg_1", object: "response", status: "queued" }));
     // The proxy collapses tool turns: only the terminal event carries the output.
     return sse(res, [{ type: "response.completed", response: completedResponse("resp_stream_1") }]);
+  }
+  if (req.method === "GET" && path === "/v1/responses/resp_bedrock_1") {
+    res.writeHead(500);
+    return res.end(JSON.stringify({ error: { message: "litellm.APIConnectionError: GET responses is not supported for bedrock" } }));
   }
   if (req.method === "GET" && path.startsWith("/v1/responses/")) {
     return res.end(JSON.stringify(completedResponse(decodeURIComponent(path.slice("/v1/responses/".length)))));
@@ -171,6 +177,19 @@ test("thinking off works on a model that rejects effort none", async () => {
   assert.ok(stdout.includes(REPLY), stdout + stderr);
   const posts = since(n).filter((r) => r.method === "POST" && r.path === "/v1/responses");
   assert.equal(posts.at(-1).body.reasoning?.effort, "low");
+});
+
+test("a background reply that is already finished is not polled", async () => {
+  // The real proxy marks claude-sonnet-4.6 as reasoning in /model_group/info.
+  const ovFile = join(tmp, "claude-reasoning.json");
+  writeFileSync(ovFile, JSON.stringify({ "claude-sonnet-4.6": { reasoning: true } }));
+  const n = requests.length;
+  const { code, stdout, stderr } = await runPi(["--model", "uva/claude-sonnet-4.6", "-p", "hi"], { UVA_MODEL_OVERRIDES_FILE: ovFile });
+  assert.equal(code, 0, stdout + stderr);
+  assert.ok(stdout.includes(REPLY), stdout + stderr);
+  const seen = since(n);
+  assert.equal(seen.find((r) => r.method === "POST" && r.path === "/v1/responses")?.body?.background, true);
+  assert.ok(!seen.some((r) => r.method === "GET" && r.path.startsWith("/v1/responses/")));
 });
 
 test("gpt-35-turbo goes to chat completions without reasoning_effort", async () => {

@@ -826,8 +826,9 @@ async function runBackgroundPoll(
   const deadline = Date.now() + 15 * 60 * 1000; // 15 min hard cap
   let delay = 1500;
   let getFails = 0;
-  let terminal: any = null;
-  while (true) {
+  // Bedrock ignores background, answers finished and 500s on GET.
+  let terminal: any = data.status === "completed" || data.status === "incomplete" ? data : null;
+  while (!terminal) {
     if (signal?.aborted) throw new Error("openai-responses-uva: aborted");
     await sleep(delay);
     let g: any;
