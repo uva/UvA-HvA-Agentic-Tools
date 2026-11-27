@@ -21,6 +21,9 @@
     "directory": "pi"
   },
   "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
   "files": [
     "index.ts",
     "README.md",
