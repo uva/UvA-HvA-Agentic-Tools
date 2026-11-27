@@ -44,8 +44,8 @@ plus key (Continue, Cline, Aider, custom scripts, and so on).
            "gpt-6-luna": { "name": "GPT-6 Luna (UvA/HvA)" },
            "claude-haiku-5.5": { "name": "Claude Haiku 5.5 (UvA/HvA)" },
            "claude-sonnet-5.5": { "name": "Claude Sonnet 5.5 (UvA/HvA)" },
-           "gpt-6.1-terra": { "name": "GPT-6.1 Terra (UvA/HvA)" },
-           "gpt-6.1-sol": { "name": "GPT-6.1 Sol (UvA/HvA)" }
+           "gpt-6.1-sol": { "name": "GPT-6.1 Sol (UvA/HvA)" },
+           "gpt-6.2-sol": { "name": "GPT-6.2 Sol (UvA/HvA)" }
          }
        }
      }
@@ -53,6 +53,10 @@ plus key (Continue, Cline, Aider, custom scripts, and so on).
    ```
 
    For HvA, use `https://llmproxy.hva.nl/v1` and `{env:HVA_API_KEY}`.
+
+   In OpenCode 2, the [config schema](https://opencode.ai/config.json) marks
+   `provider` as deprecated in favour of `providers`, but still loads it.
+   OpenCode 1 reads only `provider`, so this block works in both.
 
 3. Run OpenCode and select a model from the `uva` provider with `/models`.
 
@@ -82,7 +86,7 @@ Add the ones you care about under `models`. You can set a display `name`,
 
 - Endpoint: the OpenAI-compatible provider uses `/v1/chat/completions`. This
   is fine for plain chat and for Claude models. But OpenAI GPT reasoning
-  models (`gpt-5.x`) reject `reasoning_effort` alongside tool calls on that
+  models (`gpt-6.x`, `gpt-5.x`) reject `reasoning_effort` alongside tool calls on that
   endpoint; the proxy wants `/v1/responses` for that combination. So for
   tool-using agent runs on GPT reasoning models, prefer Claude, a non-reasoning
   GPT model, or use [Pi](../pi/README.md), which routes reasoning + tools

@@ -1,11 +1,11 @@
 # Factory Droid + UvA / HvA proxy
 
-[Factory](https://factory.ai)'s Droid CLI supports Bring Your Own Key
+[Factory](https://factory.com/)'s Droid CLI supports Bring Your Own Key
 (BYOK): you add custom models in a JSON settings file and switch to them with
 `/model`. Its `provider` field maps cleanly onto the proxy's endpoints.
 
 Based on the official
-[BYOK docs](https://docs.factory.ai/cli/byok/overview).
+[BYOK docs](https://docs.factory.com/model-independence/byok).
 
 ## Setup
 
@@ -68,7 +68,7 @@ Based on the official
 | Models | `provider` | Endpoint used | Base URL |
 | --- | --- | --- | --- |
 | Anthropic (`claude-*`) | `anthropic` | Anthropic Messages (`/v1/messages`) | `https://llmproxy.uva.nl` |
-| OpenAI reasoning (`gpt-5.x`, `o*`) | `openai` | OpenAI Responses (`/v1/responses`) | `https://llmproxy.uva.nl/v1` |
+| OpenAI reasoning (`gpt-6.x`, `gpt-5.x`, `o*`) | `openai` | OpenAI Responses (`/v1/responses`) | `https://llmproxy.uva.nl/v1` |
 | GPT-4 + open-weight (`gpt-4o`, `gpt-oss`, `Qwen`, `mistral`) | `generic-chat-completion-api` | Chat Completions (`/v1/chat/completions`) | `https://llmproxy.uva.nl/v1` |
 
 Factory notes that `provider: "openai"` (Responses API) is required for the
@@ -100,12 +100,13 @@ Windows (PowerShell), no extra tools needed:
 - Optional fields: `noImageSupport`, `extraArgs` (for example
   `temperature`), and `extraHeaders` are available per model.
 - `maxOutputTokens` is optional but recommended so responses are not clipped.
+- `maxContextLimit` (optional) sets the model's context window in input tokens.
 
 ## Troubleshooting
 
 - Model not appearing: check JSON syntax and that all required fields
   (`model`, `baseUrl`, `apiKey`, `provider`) are present.
-- "Invalid provider": `provider` must be exactly `anthropic`, `openai`, or
-  `generic-chat-completion-api`.
+- "Invalid provider": this proxy needs `anthropic`, `openai` or
+  `generic-chat-completion-api`. The BYOK docs list the other values.
 - Authentication errors: verify the key and that `baseUrl` matches the table
   above.

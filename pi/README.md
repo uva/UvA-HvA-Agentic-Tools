@@ -48,12 +48,25 @@ nvm install --lts
 
 ### 2. Install Pi
 
-Same command on every platform:
+Linux / macOS:
+
+```bash
+curl -fsSL https://pi.dev/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+powershell -c "irm https://pi.dev/install.ps1 | iex"
+```
+
+Or install it with npm, the same command on every platform:
 
 ```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi --version
 ```
+
+Check it with `pi --version`.
 
 > Windows: if PowerShell says "running scripts is disabled on this system", run
 > Set-ExecutionPolicy -Scope CurrentUser RemoteSigned once and try again.
@@ -63,10 +76,8 @@ pi --version
 Windows (PowerShell):
 
 ```powershell
-$pkgs = "pi-mcp-adapter","pi-simplify","pi-hermes-memory","@juicesharp/rpiv-voice",
-  "pi-markdown-preview","opencode-codebase-index","pi-ask-user","pi-btw",
-  "@gotgenes/pi-anthropic-auth","pi-subagents","awesome-pi-themes","pi-goal-x",
-  "pi-advisor-flow","pi-uva-hva","@narumitw/pi-plan-mode","@dietrichgebert/ponytail"
+$pkgs = "pi-uva-hva","@narumitw/pi-plan-mode","pi-ask-user","pi-btw",
+  "@dietrichgebert/ponytail","pi-markdown-preview"
 foreach ($p in $pkgs) { pi install "npm:$p" }
 pi list
 ```
@@ -74,10 +85,8 @@ pi list
 Linux / macOS:
 
 ```bash
-for p in pi-mcp-adapter pi-simplify pi-hermes-memory @juicesharp/rpiv-voice \
-  pi-markdown-preview opencode-codebase-index pi-ask-user pi-btw \
-  @gotgenes/pi-anthropic-auth pi-subagents awesome-pi-themes pi-goal-x \
-  pi-advisor-flow pi-uva-hva @narumitw/pi-plan-mode @dietrichgebert/ponytail
+for p in pi-uva-hva @narumitw/pi-plan-mode pi-ask-user pi-btw \
+  @dietrichgebert/ponytail pi-markdown-preview
 do pi install "npm:$p"; done
 pi list
 ```
@@ -85,14 +94,8 @@ pi list
 Already-installed packages are fine to re-run. Want only some? Remove them from
 the list; only pi-uva-hva is needed for the university proxy.
 
-Optional, not in the list above because of the account risk described in
-[Providers](#providers):
-
-```bash
-pi install npm:pi-antigravity
-```
-
-Optional: [public skills](#skills) and [MCP servers](#mcp-servers).
+We also recommend [Matt Pocock's skills](#skills). Optional:
+[MCP servers](#mcp-servers).
 
 ### 4. Log in and pick a model
 
@@ -107,8 +110,8 @@ Start pi, then:
 This is a package-selection snapshot, not a version-locked environment. New
 installs resolve the published package versions available at installation time.
 Extensions run with your account's permissions; review the packages before
-installing them. Workflows, subagents and advisors can make additional model
-calls, so check their routing and cost settings before use.
+installing them. Some, such as pi-btw, make additional model calls, so check
+their routing and cost settings before use.
 
 ## Install
 
@@ -141,8 +144,9 @@ Start Pi and run:
 
 Choose "UvA / HvA proxy", pick a base URL (UvA / HvA / custom), and paste
 your API key. The extension discovers every model and saves your base URL + key
-to ~/.pi/agent/openai-responses-uva.json, so the next launch reconnects with
-nothing re-entered. /uva-login runs the same flow.
+to openai-responses-uva.json in Pi's agent dir (~/.pi/agent unless --agent-dir
+or PI_CODING_AGENT_DIR is set), so the next launch reconnects with nothing
+re-entered. /uva-login runs the same flow.
 
 Pi only lists the models that actually work for your key. During login, each
 model gets one tiny test request, so login can take up to two minutes. Models
@@ -163,7 +167,7 @@ Reasoning models default to thinking ON at medium. You can raise or lower a
 model's default in /configure-models, or set the level per run from the CLI:
 
 ```bash
-pi --provider uva --model gpt-5.6-sol --thinking high -p "hello"
+pi --provider uva --model gpt-6.1-sol --thinking high -p "hello"
 ```
 
 ## Configuration
@@ -173,10 +177,10 @@ variables (all optional):
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| UVA_API_KEY | - | API key, if you prefer env over /login. |
+| UVA_API_KEY | - | API key, if you prefer env over /login. A saved /login wins when both exist. |
 | UVA_BASE_URL | https://llmproxy.uva.nl/v1 | Proxy base URL (must end at the /v1 root). |
 | UVA_PROVIDER_ID | uva | Provider id shown in /model and --provider. |
-| UVA_CREDENTIALS_FILE | ~/.pi/agent/openai-responses-uva.json | Override the saved-credentials path. |
+| UVA_CREDENTIALS_FILE | `<agent dir>/openai-responses-uva.json` | Override the saved-credentials path. |
 | UVA_NO_AUTO_THINKING | - | Set to disable the medium thinking default. |
 | UVA_MODEL_OVERRIDES_FILE | - | Path to a JSON file overriding per-model capabilities (below). |
 
@@ -189,7 +193,7 @@ Interactive menu (easiest): run /configure-models. Pick a model, then set
 its context window and max output (type the number), toggle reasoning on/off,
 and choose the default thinking level applied when that model is selected. Two
 options at the end, Save & apply changes and Discard & exit. Saved
-overrides are written to ~/.pi/agent/openai-responses-uva.models.json and
+overrides are written to openai-responses-uva.models.json in Pi's agent dir and
 applied live (and on every future launch).
 
 By hand: point UVA_MODEL_OVERRIDES_FILE at a JSON file (this overrides the
@@ -197,12 +201,12 @@ default path above):
 
 ```json
 {
-  "gpt-5.6-sol":    { "contextWindow": 272000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
+  "gpt-6.1-sol":    { "contextWindow": 272000, "maxTokens": 128000, "defaultThinkingLevel": "high" },
   "some-new-model": { "reasoning": false, "input": ["text", "image"], "contextWindow": 200000, "maxTokens": 32000 }
 }
 ```
 
-The defaultThinkingLevel on gpt-5.6-sol above is just an example of pinning
+The defaultThinkingLevel on gpt-6.1-sol above is just an example of pinning
 one model to high; by default every reasoning model starts at medium.
 
 Each key is a model id; each value may set any of reasoning,
@@ -230,7 +234,7 @@ other settings unchanged. Only do this for 1M models; don't raise smaller
 models to 272k.
 
 To configure it by hand, merge the following into
-~/.pi/agent/openai-responses-uva.models.json (or your
+openai-responses-uva.models.json in Pi's agent dir (or your
 UVA_MODEL_OVERRIDES_FILE), preserving all other models and settings:
 
 ```json
@@ -304,9 +308,10 @@ default thinking level, per-id via UVA_MODEL_OVERRIDES_FILE or
 
 ## Compatibility
 
-- Pi coding-agent with the @earendil-works/pi-ai runtime (verified on 0.80.x).
-- Imports only the extension-facing @earendil-works/pi-ai surface, so it keeps
-  working across Pi updates (it does not patch node_modules).
+- Tested on Pi 1.7.0.
+- The offline tests (`npm test` in pi/) run on Linux and macOS only.
+- Imports only the extension-facing `@earendil-works/pi-ai/compat` entry, so it
+  keeps working across Pi updates (it does not patch node_modules).
 
 ## Pi harness setup
 
@@ -314,65 +319,45 @@ This is a description of a recommended setup, not a
 requirement to install everything just to use the university proxy. The
 [quick setup](#quick-setup) contains the install commands.
 
-### Context, memory & codebase tools
-
-| Package | description |
-| --- | --- |
-| [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
-| [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
-| [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter) | Connect separately configured MCP tools and servers. |
-
-### Planning, delegation & code quality
-
-| Package | description |
-| --- | --- |
-| [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
-| [pi-subagents](https://www.npmjs.com/package/pi-subagents) | Focused delegation and scripted multi-agent execution. |
-| [pi-goal-x](https://www.npmjs.com/package/pi-goal-x) | Persistent goals, structured tasks, continuation and completion auditing. |
-| [pi-advisor-flow](https://www.npmjs.com/package/pi-advisor-flow) | On-demand second opinions from an advisor model. |
-| [pi-ask-user](https://www.npmjs.com/package/pi-ask-user) | Structured questions and explicit user decisions. |
-| [pi-simplify](https://www.npmjs.com/package/pi-simplify) | Review changed code for clarity and maintainability. |
-| [@dietrichgebert/ponytail](https://www.npmjs.com/package/@dietrichgebert/ponytail) | Keep implementations small and avoid unnecessary complexity. |
-
-### Providers
+### Packages
 
 | Package | description |
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
-| [@gotgenes/pi-anthropic-auth](https://www.npmjs.com/package/@gotgenes/pi-anthropic-auth) | Anthropic OAuth compatibility. |
-| [pi-antigravity](https://www.npmjs.com/package/pi-antigravity) | Google Antigravity models (Gemini and others) via Google sign-in, plus Google Search grounding, URL reading and image generation tools. Unofficial: Google's terms forbid third-party access to consumer Antigravity accounts and accounts have been suspended for it. Use at your own risk, never with your university Google account. |
-
-### Interface & convenience
-
-| Package | description | 
-| --- | --- |
-| [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
+| [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before the agent edits anything. |
+| [pi-ask-user](https://www.npmjs.com/package/pi-ask-user) | The agent asks a structured question instead of guessing when a task is unclear. |
+| [pi-btw](https://www.npmjs.com/package/pi-btw) | Ask a side question without interrupting the running task. |
+| [@dietrichgebert/ponytail](https://www.npmjs.com/package/@dietrichgebert/ponytail) | Keeps changes small and readable, so you can understand and explain the code. |
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
-| [pi-btw](https://www.npmjs.com/package/pi-btw) | Side conversations without interrupting the main task. |
-| [awesome-pi-themes](https://www.npmjs.com/package/awesome-pi-themes) | Additional terminal themes. |
 
 ### Skills
 
-Skills are reusable instructions the agent loads when a task matches. We use
-the public [mattpocock/skills](https://github.com/mattpocock/skills) set (TDD,
-bug diagnosis, code review, PR writing, specs and tickets, grilling a plan,
-prototyping, and more). Install them for Pi with the
+Skills are reusable instructions that the agent loads when a task matches. We
+recommend installing all of Matt Pocock's
+[skills](https://github.com/mattpocock/skills). They help with planning, TDD,
+debugging, review, and writing specs and tickets: for example
+grill-with-docs, tdd, diagnosing-bugs, code-review, to-spec and to-tickets.
+Install all of them globally for Pi with the
 [skills CLI](https://www.npmjs.com/package/skills) (same command on every
 platform):
 
 ```bash
-npx skills add mattpocock/skills -g -a pi -s '*' -y
+npx skills@latest add mattpocock/skills -g -a pi -s '*' -y
 ```
 
-They land in ~/.agents/skills, which Pi reads on start. Update later with
-npx skills update -g. Skills run with the agent's permissions; read them
-before use.
+They are saved in ~/.agents/skills, which Pi reads when it starts. Run
+/skill:setup-matt-pocock-skills once in each repo. To update later, run
+npx skills@latest update -g, and run the add command again to pick up new
+skills. Skills run with the agent's permissions, so read them before you use
+them.
 
 ### MCP servers
 
-Public MCP servers we use through pi-mcp-adapter. Merge them into the
-mcpServers of ~/.pi/agent/mcp-adapter.json (all projects; create the file if
-it does not exist), then restart Pi or run /reload:
+These are the public MCP servers we use through Pi's built-in MCP support.
+Merge them into the mcpServers of ~/.pi/agent/mcp.json (it applies to all
+projects; create the file if it does not exist). Check them with pi mcp list,
+then restart Pi or run /reload. If you still have pi-mcp-adapter installed,
+remove it: it replaces the built-in support, and Pi then ignores mcp.json.
 
 ```json
 {
@@ -380,8 +365,8 @@ it does not exist), then restart Pi or run /reload:
     "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest", "--headless"] },
     "deepwiki": { "url": "https://mcp.deepwiki.com/mcp" },
     "context7": { "url": "https://mcp.context7.com/mcp" },
-    "parallel-search": { "url": "https://search.parallel.ai/mcp", "directTools": true },
-    "github": { "url": "https://api.githubcopilot.com/mcp", "auth": "bearer", "bearerToken": "!gh auth token" },
+    "parallel-search": { "url": "https://search.parallel.ai/mcp", "exposure": "direct" },
+    "github": { "url": "https://api.githubcopilot.com/mcp", "headers": { "Authorization": "!echo Bearer $(gh auth token)" } },
     "shadcn": { "command": "npx", "args": ["-y", "shadcn@latest", "mcp"] },
     "ui-layouts": { "command": "npx", "args": ["-y", "@ui-layouts/mcp@latest"] },
     "lazyweb": { "url": "https://www.lazyweb.com/mcp/public" },
@@ -396,13 +381,14 @@ it does not exist), then restart Pi or run /reload:
 | [deepwiki](https://deepwiki.com) | Ask questions about public GitHub repositories. |
 | [context7](https://context7.com) | Up-to-date library and framework documentation. |
 | [parallel-search](https://parallel.ai) | Web search and page fetching for agents. |
-| [github](https://github.com/github/github-mcp-server) | Issues, pull requests and code on GitHub. Needs the [GitHub CLI](https://cli.github.com) logged in (gh auth login); the token is read at connect time, never stored in the file. |
+| [github](https://github.com/github/github-mcp-server) | Issues, pull requests and code on GitHub. Needs the [GitHub CLI](https://cli.github.com) logged in (gh auth login); the token is read at connect time, never stored in the file. Checked on Linux; if the command fails on Windows, set GITHUB_TOKEN and use "Bearer ${GITHUB_TOKEN}" instead. |
 | [shadcn](https://ui.shadcn.com/docs/mcp) | Browse and add shadcn/ui components. |
 | [ui-layouts](https://www.ui-layouts.com) | UI layout and component examples. |
 | [lazyweb](https://www.lazyweb.com) | Real-app UI design references. |
 | [avalonia-docs](https://docs.avaloniaui.net) | Avalonia UI documentation (only for Avalonia/.NET projects). |
 
-Keep only the ones you need: every server adds tools the model has to read.
+Keep only the ones you need: each one starts a process or connection and adds
+a line to the system prompt.
 
 ## License
 

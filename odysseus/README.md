@@ -1,6 +1,6 @@
 # Odysseus + UvA / HvA proxy
 
-[Odysseus](https://github.com/pewdiepie-archdaemon/odysseus) is a self-hosted AI
+[Odysseus](https://github.com/odysseus-dev/odysseus) is a self-hosted AI
 workspace: chat, agents, deep research, documents, email, notes, and calendar,
 with local and API models. You run it yourself (Docker or native) and open it in
 the browser. It can talk to OpenAI-compatible endpoints, so the proxy plugs in as
@@ -13,12 +13,12 @@ for a provider.
 
 ## Install Odysseus
 
-From the project [Quick Start](https://github.com/pewdiepie-archdaemon/odysseus):
+From the project [Quick Start](https://github.com/odysseus-dev/odysseus):
 
 Linux / macOS:
 
 ```bash
-git clone https://github.com/pewdiepie-archdaemon/odysseus.git
+git clone https://github.com/odysseus-dev/odysseus.git
 cd odysseus
 cp .env.example .env
 docker compose up -d --build
@@ -27,13 +27,13 @@ docker compose up -d --build
 Windows (PowerShell), with Docker Desktop running:
 
 ```powershell
-git clone https://github.com/pewdiepie-archdaemon/odysseus.git
+git clone https://github.com/odysseus-dev/odysseus.git
 cd odysseus
 Copy-Item .env.example .env
 docker compose up -d --build
 ```
 
-Open `http://localhost:7000` once the containers are healthy. The first admin
+Open `http://localhost:7011` once the containers are healthy. The first admin
 password is printed in the logs:
 
 ```bash
@@ -41,7 +41,7 @@ docker compose logs odysseus
 ```
 
 Native, GPU, Windows, and macOS instructions are in the official
-[setup guide](https://github.com/pewdiepie-archdaemon/odysseus/blob/dev/docs/setup.md).
+[setup guide](https://github.com/odysseus-dev/odysseus/blob/dev/website/setup.md).
 
 ## Connect the proxy
 

@@ -1,6 +1,6 @@
 # Claude Code + UvA / HvA proxy
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's
+[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's
 terminal coding agent. It talks the Anthropic Messages API, and the proxy
 exposes that API natively (`/v1/messages`), so this is the easiest setup of
 all: two environment variables, no config files, no extension.

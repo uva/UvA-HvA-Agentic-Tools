@@ -49,8 +49,8 @@
  * ----------
  * Run `/login` (choose "UvA / HvA proxy") or `/uva-login`: pick a base URL
  * (UvA / HvA / custom), paste your API key, and every model is auto-discovered.
- * The base URL + key are saved to ~/.pi/agent/openai-responses-uva.json so the
- * next launch reconnects with nothing re-entered. Then pick a model via /models.
+ * The base URL + key are saved to openai-responses-uva.json in Pi's agent dir
+ * so the next launch reconnects with nothing re-entered. Then use /models.
  *
  * Reasoning models default to thinking ON at medium
  * (set UVA_NO_AUTO_THINKING=1 to disable this; change any model's default in
@@ -64,12 +64,12 @@
  *   UVA_CREDENTIALS_FILE  Override the saved-credentials path.
  *   UVA_NO_AUTO_THINKING  Set to disable the medium thinking default.
  *
- * Only imports the aliased root "@earendil-works/pi-ai" (the extension-facing
- * compat surface), so it works under Pi's jiti extension loader.
+ * Only imports "@earendil-works/pi-ai/compat" (the extension-facing surface),
+ * so it works under Pi's jiti extension loader.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { getApiProvider, createAssistantMessageEventStream, calculateCost } from "@earendil-works/pi-ai";
+import { getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { getApiProvider, createAssistantMessageEventStream, calculateCost } from "@earendil-works/pi-ai/compat";
 
 const BASE_API = "openai-responses"; // pristine built-in handler we delegate to
 const CUSTOM_API = "openai-responses-uva"; // our fixed handler is registered under this
@@ -84,15 +84,15 @@ const PROVIDER_ID = process.env.UVA_PROVIDER_ID || "uva";
 // Active connection settings. Seeded from env, overridden by saved credentials
 // (from the /login flow) at startup, and updated live on login.
 let activeBaseUrl = (process.env.UVA_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
-let activeApiKey: string | undefined = process.env.UVA_API_KEY || process.env.OPENAI_API_KEY;
+let activeApiKey: string | undefined = process.env.UVA_API_KEY;
+let savedApiKey: string | undefined;
 
 // Persisted login (base URL + API key) so model discovery works at the next
 // startup with nothing re-entered. Path overridable via UVA_CREDENTIALS_FILE.
 function credsFile(): string {
   if (process.env.UVA_CREDENTIALS_FILE) return process.env.UVA_CREDENTIALS_FILE;
-  const os = require("node:os");
   const { join } = require("node:path");
-  return join(os.homedir(), ".pi", "agent", "openai-responses-uva.json");
+  return join(getAgentDir(), "openai-responses-uva.json");
 }
 
 function loadCreds(): { baseUrl?: string; apiKey?: string } | null {
@@ -122,7 +122,7 @@ function saveCreds(creds: { baseUrl: string; apiKey: string }): void {
 const DENY = /embedding|whisper|audio|tts|speech|dall|(^|[-_])image|document-ai|ocr|rerank|moderation|guard|stable-diffusion|batch/i;
 
 // Known-good fallback if /v1/models discovery fails.
-const FALLBACK_MODEL_IDS = ["gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-luna", "gpt-5.5", "gpt-5.1", "gpt-5", "gpt-4.1", "gpt-4o"];
+const FALLBACK_MODEL_IDS = ["gpt-6.2-astra", "gpt-6.2-sol", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-4.1"];
 
 // ---------------------------------------------------------------------------
 // FALLBACK capability table.
@@ -214,6 +214,8 @@ let currentModels: any[] = [];
 const modelRoutes = new Map<string, "responses" | "chat">();
 // Runtime self-heal overrides (win over modelRoutes, survive re-registration).
 const routeOverrides = new Map<string, "responses" | "chat">();
+// Ids whose deployment answered 400 to effort "none" this session.
+const noneRejected = new Set<string>();
 
 function routeForModel(id: string, providers?: string[]): "responses" | "chat" {
   if (routeOverrides.has(id)) return routeOverrides.get(id)!;
@@ -274,12 +276,11 @@ function buildModelDef(info: ModelInfo, overrides: Record<string, any>) {
 
 // Per-id capability overrides (context window, reasoning, default thinking
 // level, ...) written by the /configure-models menu. Path is
-// UVA_MODEL_OVERRIDES_FILE or ~/.pi/agent/openai-responses-uva.models.json.
+// UVA_MODEL_OVERRIDES_FILE or <agent dir>/openai-responses-uva.models.json.
 function overridesFile(): string {
   if (process.env.UVA_MODEL_OVERRIDES_FILE) return process.env.UVA_MODEL_OVERRIDES_FILE;
-  const os = require("node:os");
   const { join } = require("node:path");
-  return join(os.homedir(), ".pi", "agent", "openai-responses-uva.models.json");
+  return join(getAgentDir(), "openai-responses-uva.models.json");
 }
 
 function loadOverrides(): Record<string, any> {
@@ -814,8 +815,14 @@ async function runBackgroundPoll(
     }
     throw new Error(`openai-responses-uva: HTTP ${res.status}: ${text.slice(0, 200).replace(/\s+/g, " ")}`);
   }
+  // Bedrock ignores background, answers finished and 500s on GET.
+  let terminal: any = data?.status === "completed" || data?.status === "incomplete" ? data : null;
+  if (data?.status === "failed" || data?.status === "cancelled") {
+    const e = data.error;
+    throw new Error(`openai-responses-uva: background ${data.status}: ${e?.message || e?.code || "no message"}`);
+  }
   const id = data?.id;
-  if (!id) throw new Error("openai-responses-uva: background response missing id");
+  if (!id && !terminal) throw new Error("openai-responses-uva: background response missing id");
 
   state.started = true;
   out.push({ type: "start", partial: output });
@@ -825,8 +832,7 @@ async function runBackgroundPoll(
   const deadline = Date.now() + 15 * 60 * 1000; // 15 min hard cap
   let delay = 1500;
   let getFails = 0;
-  let terminal: any = null;
-  while (true) {
+  while (!terminal) {
     if (signal?.aborted) throw new Error("openai-responses-uva: aborted");
     await sleep(delay);
     let g: any;
@@ -881,7 +887,20 @@ function chatDelegate(model: any, context: any, options: any): any {
       error: {
         role: "assistant",
         content: [],
+        api: model.api,
+        provider: model.provider,
+        model: model.id,
+        usage: {
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+          reasoning: 0,
+          totalTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
         stopReason: "error",
+        timestamp: Date.now(),
         errorMessage: "openai-responses-uva: openai-completions handler unavailable",
       },
     });
@@ -939,11 +958,13 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
         if (next !== undefined) params = next;
       }
 
-      const apiKey = options?.apiKey || activeApiKey || process.env.UVA_API_KEY || process.env.OPENAI_API_KEY;
+      const apiKey = options?.apiKey || activeApiKey || process.env.UVA_API_KEY;
       if (!apiKey) throw new Error("openai-responses-uva: no API key (run /login or set UVA_API_KEY)");
       const url = String(model.baseUrl || activeBaseUrl).replace(/\/+$/, "") + "/responses";
 
       const state = { started: false };
+      const low = { ...params, reasoning: { ...params.reasoning, effort: "low" } };
+      if (params?.reasoning?.effort === "none" && noneRejected.has(model.id)) params = low;
       const effort = params?.reasoning?.effort;
       // Reasoning turns buffer server-side (the proxy sends no interim bytes
       // while the model thinks) and can 504 mid-stream. Route them straight to
@@ -966,6 +987,10 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
           // retrying the same doomed stream.
           if (!state.started && gateway && !options?.signal?.aborted) {
             await runBackgroundPoll(url, apiKey, params, out, output, model, options?.signal, options?.onResponse, state);
+          } else if (status === 400 && effort === "none" && /'none' is not supported/.test(err?.message)) {
+            // Some deployments (gpt-6.1-sol) reject "none"; "low" is the floor.
+            noneRejected.add(model.id);
+            await runBackgroundPoll(url, apiKey, low, out, output, model, options?.signal, options?.onResponse, state);
           } else {
             throw err;
           }
@@ -1118,12 +1143,16 @@ async function buildWorkingModels(apiKey: string | undefined, baseUrl: string, p
   return models.filter((m) => !broken.has(m.id));
 }
 
+let registrations = 0;
+
 function registerProviderNow(pi: ExtensionAPI, models: any[], baseUrl: string): void {
+  registrations++;
   currentModels = models;
   pi.registerProvider(PROVIDER_ID, {
     name: "UvA / HvA (Responses fix)",
     baseUrl: baseUrl.replace(/\/+$/, ""),
-    apiKey: "$UVA_API_KEY",
+    // Pi reads "$" as an env reference and a leading "!" as a shell command.
+    apiKey: savedApiKey ? savedApiKey.replace(/[$!]/g, "$$$&") : "$UVA_API_KEY",
     api: CUSTOM_API,
     models,
     streamSimple: uvaStreamSimple as any,
@@ -1171,7 +1200,7 @@ function makeOAuth(pi: ExtensionAPI) {
       callbacks.onProgress?.(`Connected, ${models.length} working models available.`);
 
       saveCreds({ baseUrl, apiKey });
-      activeApiKey = apiKey;
+      activeApiKey = savedApiKey = apiKey;
       activeBaseUrl = baseUrl;
       registerProviderNow(pi, models, baseUrl);
 
@@ -1267,7 +1296,7 @@ async function configureOneModel(ctx: any, id: string, draft: Record<string, any
 export default async function (pi: ExtensionAPI): Promise<void> {
   const creds = loadCreds();
   if (creds?.baseUrl) activeBaseUrl = String(creds.baseUrl).replace(/\/+$/, "");
-  if (creds?.apiKey) activeApiKey = creds.apiKey;
+  if (typeof creds?.apiKey === "string" && creds.apiKey) activeApiKey = savedApiKey = creds.apiKey;
 
   registerProviderNow(pi, await buildWorkingModels(activeApiKey, activeBaseUrl, false), activeBaseUrl);
 
@@ -1276,9 +1305,11 @@ export default async function (pi: ExtensionAPI): Promise<void> {
   pi.on("session_start", (event: any, ctx: any) => {
     if (event?.reason !== "startup" || !ctx?.hasUI || !activeApiKey || loadProbe(activeBaseUrl)) return;
     const baseUrl = activeBaseUrl;
+    const seen = registrations;
     buildWorkingModels(activeApiKey, baseUrl, true)
       .then((models) => {
-        if (baseUrl === activeBaseUrl) registerProviderNow(pi, models, baseUrl);
+        // /login or /configure-models may have re-registered meanwhile.
+        if (baseUrl === activeBaseUrl && seen === registrations) registerProviderNow(pi, models, baseUrl);
       })
       .catch(() => {});
   });
