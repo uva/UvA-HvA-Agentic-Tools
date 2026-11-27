@@ -39,7 +39,7 @@ function sse(res, events) {
 function handle(req, res, body) {
   const path = req.url.split("?")[0];
   if (req.method === "GET" && path === "/v1/models") {
-    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-35-turbo", "text-embedding-3"];
+    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-6.1-sol", "gpt-35-turbo", "text-embedding-3"];
     return res.end(JSON.stringify({ object: "list", data: ids.map((id) => ({ id, object: "model" })) }));
   }
   if (path === "/model_group/info") {
@@ -47,6 +47,11 @@ function handle(req, res, body) {
     return res.end(JSON.stringify({ error: "forbidden" }));
   }
   if (req.method === "POST" && path === "/v1/responses") {
+    if (body?.model === "gpt-6.1-sol" && body?.reasoning?.effort === "none") {
+      res.writeHead(400);
+      const message = "Unsupported value: 'none' is not supported with the 'gpt-6.1-sol-2026-09-29' model.";
+      return res.end(JSON.stringify({ error: { message: `litellm.BadRequestError: AzureException BadRequestError - ${message}` } }));
+    }
     if (body?.background) return res.end(JSON.stringify({ id: "resp_bg_1", object: "response", status: "queued" }));
     // The proxy collapses tool turns: only the terminal event carries the output.
     return sse(res, [{ type: "response.completed", response: completedResponse("resp_stream_1") }]);
@@ -157,6 +162,15 @@ test("gpt-6-sol uses background and polls", async () => {
   assert.equal(post?.body?.background, true);
   assert.equal(typeof post.body.reasoning?.effort, "string");
   assert.ok(seen.some((r) => r.method === "GET" && r.path === "/v1/responses/resp_bg_1"));
+});
+
+test("thinking off works on a model that rejects effort none", async () => {
+  const n = requests.length;
+  const { code, stdout, stderr } = await runPi(["--model", "uva/gpt-6.1-sol", "--thinking", "off", "-p", "hi"]);
+  assert.equal(code, 0, stdout + stderr);
+  assert.ok(stdout.includes(REPLY), stdout + stderr);
+  const posts = since(n).filter((r) => r.method === "POST" && r.path === "/v1/responses");
+  assert.equal(posts.at(-1).body.reasoning?.effort, "low");
 });
 
 test("gpt-35-turbo goes to chat completions without reasoning_effort", async () => {

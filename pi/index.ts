@@ -214,6 +214,8 @@ let currentModels: any[] = [];
 const modelRoutes = new Map<string, "responses" | "chat">();
 // Runtime self-heal overrides (win over modelRoutes, survive re-registration).
 const routeOverrides = new Map<string, "responses" | "chat">();
+// Ids whose deployment answered 400 to effort "none" this session.
+const noneRejected = new Set<string>();
 
 function routeForModel(id: string, providers?: string[]): "responses" | "chat" {
   if (routeOverrides.has(id)) return routeOverrides.get(id)!;
@@ -956,6 +958,8 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
       const url = String(model.baseUrl || activeBaseUrl).replace(/\/+$/, "") + "/responses";
 
       const state = { started: false };
+      const low = { ...params, reasoning: { ...params.reasoning, effort: "low" } };
+      if (params?.reasoning?.effort === "none" && noneRejected.has(model.id)) params = low;
       const effort = params?.reasoning?.effort;
       // Reasoning turns buffer server-side (the proxy sends no interim bytes
       // while the model thinks) and can 504 mid-stream. Route them straight to
@@ -978,6 +982,10 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
           // retrying the same doomed stream.
           if (!state.started && gateway && !options?.signal?.aborted) {
             await runBackgroundPoll(url, apiKey, params, out, output, model, options?.signal, options?.onResponse, state);
+          } else if (status === 400 && effort === "none" && /'none' is not supported/.test(err?.message)) {
+            // Some deployments (gpt-6.1-sol) reject "none"; "low" is the floor.
+            noneRejected.add(model.id);
+            await runBackgroundPoll(url, apiKey, low, out, output, model, options?.signal, options?.onResponse, state);
           } else {
             throw err;
           }
