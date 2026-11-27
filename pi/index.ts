@@ -1143,7 +1143,10 @@ async function buildWorkingModels(apiKey: string | undefined, baseUrl: string, p
   return models.filter((m) => !broken.has(m.id));
 }
 
+let registrations = 0;
+
 function registerProviderNow(pi: ExtensionAPI, models: any[], baseUrl: string): void {
+  registrations++;
   currentModels = models;
   pi.registerProvider(PROVIDER_ID, {
     name: "UvA / HvA (Responses fix)",
@@ -1293,7 +1296,7 @@ async function configureOneModel(ctx: any, id: string, draft: Record<string, any
 export default async function (pi: ExtensionAPI): Promise<void> {
   const creds = loadCreds();
   if (creds?.baseUrl) activeBaseUrl = String(creds.baseUrl).replace(/\/+$/, "");
-  if (creds?.apiKey) activeApiKey = savedApiKey = creds.apiKey;
+  if (typeof creds?.apiKey === "string" && creds.apiKey) activeApiKey = savedApiKey = creds.apiKey;
 
   registerProviderNow(pi, await buildWorkingModels(activeApiKey, activeBaseUrl, false), activeBaseUrl);
 
@@ -1302,9 +1305,11 @@ export default async function (pi: ExtensionAPI): Promise<void> {
   pi.on("session_start", (event: any, ctx: any) => {
     if (event?.reason !== "startup" || !ctx?.hasUI || !activeApiKey || loadProbe(activeBaseUrl)) return;
     const baseUrl = activeBaseUrl;
+    const seen = registrations;
     buildWorkingModels(activeApiKey, baseUrl, true)
       .then((models) => {
-        if (baseUrl === activeBaseUrl) registerProviderNow(pi, models, baseUrl);
+        // /login or /configure-models may have re-registered meanwhile.
+        if (baseUrl === activeBaseUrl && seen === registrations) registerProviderNow(pi, models, baseUrl);
       })
       .catch(() => {});
   });
