@@ -76,10 +76,8 @@ Check it with `pi --version`.
 Windows (PowerShell):
 
 ```powershell
-$pkgs = "pi-mcp-adapter","pi-simplify","pi-hermes-memory","@juicesharp/rpiv-voice",
-  "pi-markdown-preview","opencode-codebase-index","pi-ask-user","pi-btw",
-  "@gotgenes/pi-anthropic-auth","pi-subagents","awesome-pi-themes","pi-goal-x",
-  "pi-advisor-flow","pi-uva-hva","@narumitw/pi-plan-mode","@dietrichgebert/ponytail"
+$pkgs = "pi-uva-hva","@narumitw/pi-plan-mode","pi-ask-user","pi-btw",
+  "@dietrichgebert/ponytail","pi-markdown-preview"
 foreach ($p in $pkgs) { pi install "npm:$p" }
 pi list
 ```
@@ -87,23 +85,14 @@ pi list
 Linux / macOS:
 
 ```bash
-for p in pi-mcp-adapter pi-simplify pi-hermes-memory @juicesharp/rpiv-voice \
-  pi-markdown-preview opencode-codebase-index pi-ask-user pi-btw \
-  @gotgenes/pi-anthropic-auth pi-subagents awesome-pi-themes pi-goal-x \
-  pi-advisor-flow pi-uva-hva @narumitw/pi-plan-mode @dietrichgebert/ponytail
+for p in pi-uva-hva @narumitw/pi-plan-mode pi-ask-user pi-btw \
+  @dietrichgebert/ponytail pi-markdown-preview
 do pi install "npm:$p"; done
 pi list
 ```
 
 Already-installed packages are fine to re-run. Want only some? Remove them from
 the list; only pi-uva-hva is needed for the university proxy.
-
-Optional, not in the list above because of the account risk described in
-[Providers](#providers):
-
-```bash
-pi install npm:pi-antigravity
-```
 
 Optional: [public skills](#skills) and [MCP servers](#mcp-servers).
 
@@ -328,42 +317,16 @@ This is a description of a recommended setup, not a
 requirement to install everything just to use the university proxy. The
 [quick setup](#quick-setup) contains the install commands.
 
-### Context, memory & codebase tools
-
-| Package | description |
-| --- | --- |
-| [pi-hermes-memory](https://www.npmjs.com/package/pi-hermes-memory) | Persistent memory, past-session search and reusable procedural skills. |
-| [opencode-codebase-index](https://www.npmjs.com/package/opencode-codebase-index) | Semantic codebase search, symbol discovery and call-graph navigation. |
-| [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter) | Connect separately configured MCP tools and servers. |
-
-### Planning, delegation & code quality
-
-| Package | description |
-| --- | --- |
-| [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before implementation. |
-| [pi-subagents](https://www.npmjs.com/package/pi-subagents) | Focused delegation and scripted multi-agent execution. |
-| [pi-goal-x](https://www.npmjs.com/package/pi-goal-x) | Persistent goals, structured tasks, continuation and completion auditing. |
-| [pi-advisor-flow](https://www.npmjs.com/package/pi-advisor-flow) | On-demand second opinions from an advisor model. |
-| [pi-ask-user](https://www.npmjs.com/package/pi-ask-user) | Structured questions and explicit user decisions. |
-| [pi-simplify](https://www.npmjs.com/package/pi-simplify) | Review changed code for clarity and maintainability. |
-| [@dietrichgebert/ponytail](https://www.npmjs.com/package/@dietrichgebert/ponytail) | Keep implementations small and avoid unnecessary complexity. |
-
-### Providers
+### Packages
 
 | Package | description |
 | --- | --- |
 | [pi-uva-hva](https://www.npmjs.com/package/pi-uva-hva) | The UvA/HvA provider documented on this page. |
-| [@gotgenes/pi-anthropic-auth](https://www.npmjs.com/package/@gotgenes/pi-anthropic-auth) | Anthropic OAuth compatibility. |
-| [pi-antigravity](https://www.npmjs.com/package/pi-antigravity) | Google Antigravity models (Gemini and others) via Google sign-in, plus Google Search grounding, URL reading and image generation tools. Unofficial: Google's terms forbid third-party access to consumer Antigravity accounts and accounts have been suspended for it. Use at your own risk, never with your university Google account. |
-
-### Interface & convenience
-
-| Package | description | 
-| --- | --- |
-| [@juicesharp/rpiv-voice](https://www.npmjs.com/package/@juicesharp/rpiv-voice) | Local speech-to-text dictation. |
+| [@narumitw/pi-plan-mode](https://www.npmjs.com/package/@narumitw/pi-plan-mode) | Read-only planning before the agent edits anything. |
+| [pi-ask-user](https://www.npmjs.com/package/pi-ask-user) | The agent asks a structured question instead of guessing when a task is unclear. |
+| [pi-btw](https://www.npmjs.com/package/pi-btw) | Ask a side question without interrupting the running task. |
+| [@dietrichgebert/ponytail](https://www.npmjs.com/package/@dietrichgebert/ponytail) | Keeps changes small and readable, so you can understand and explain the code. |
 | [pi-markdown-preview](https://www.npmjs.com/package/pi-markdown-preview) | Render Markdown/LaTeX and export previews. |
-| [pi-btw](https://www.npmjs.com/package/pi-btw) | Side conversations without interrupting the main task. |
-| [awesome-pi-themes](https://www.npmjs.com/package/awesome-pi-themes) | Additional terminal themes. |
 
 ### Skills
 
