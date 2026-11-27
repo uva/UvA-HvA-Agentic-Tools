@@ -2,7 +2,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { spawn, execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -95,7 +95,7 @@ after(() => {
   if (tmp) rmSync(tmp, { recursive: true, force: true });
 });
 
-function runPi(args, extraEnv = {}) {
+function runPi(args, extraEnv = {}, agentDir = mkdtempSync(join(tmp, "agent-"))) {
   const home = mkdtempSync(join(tmp, "home-"));
   const env = { ...process.env, HOME: home, UVA_CREDENTIALS_FILE: join(tmp, "creds.json"), UVA_API_KEY: "sk-test-env" };
   for (const k of ["OPENAI_API_KEY", "UVA_MODEL_OVERRIDES_FILE", "PI_CODING_AGENT_DIR", "UVA_BASE_URL", "UVA_PROVIDER_ID"]) delete env[k];
@@ -103,7 +103,6 @@ function runPi(args, extraEnv = {}) {
     if (v === undefined) delete env[k];
     else env[k] = v;
   }
-  const agentDir = mkdtempSync(join(tmp, "agent-"));
   const full = ["--agent-dir", agentDir, "--offline", "-ne", "--no-session", "-e", EXTENSION, ...args];
   return new Promise((resolve, reject) => {
     const child = spawn(PI_BIN, full, { cwd: home, env, stdio: ["ignore", "pipe", "pipe"] });
@@ -117,7 +116,7 @@ function runPi(args, extraEnv = {}) {
     }, 90_000);
     child.on("close", (code) => {
       clearTimeout(timer);
-      resolve({ code, stdout, stderr });
+      resolve({ code, stdout, stderr, home });
     });
   });
 }
@@ -209,6 +208,17 @@ test("an OpenAI key alone never reaches the proxy", async () => {
   await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
   const auths = since(n).map((r) => `${r.method} ${r.path} ${r.auth}`);
   assert.ok(!auths.some((a) => a.includes("sk-test-openai")), auths.join("\n"));
+});
+
+test("the saved login is read from --agent-dir", async () => {
+  const agentDir = mkdtempSync(join(tmp, "agent-"));
+  writeFileSync(join(agentDir, "openai-responses-uva.json"), JSON.stringify({ baseUrl, apiKey: "sk-test-saved" }));
+  const n = requests.length;
+  const { code, stdout, stderr, home } = await runPi(["--list-models", "uva"], { UVA_API_KEY: undefined, UVA_CREDENTIALS_FILE: undefined }, agentDir);
+  assert.equal(code, 0, stderr);
+  assert.ok(stdout.includes("gpt-4.1"), stdout + stderr);
+  assert.ok(since(n).some((r) => r.auth === "Bearer sk-test-saved"));
+  assert.ok(!existsSync(join(home, ".pi")), "wrote under $HOME/.pi");
 });
 
 after(() => {

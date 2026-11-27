@@ -49,8 +49,8 @@
  * ----------
  * Run `/login` (choose "UvA / HvA proxy") or `/uva-login`: pick a base URL
  * (UvA / HvA / custom), paste your API key, and every model is auto-discovered.
- * The base URL + key are saved to ~/.pi/agent/openai-responses-uva.json so the
- * next launch reconnects with nothing re-entered. Then pick a model via /models.
+ * The base URL + key are saved to openai-responses-uva.json in Pi's agent dir
+ * so the next launch reconnects with nothing re-entered. Then pick a model via /models.
  *
  * Reasoning models default to thinking ON at medium
  * (set UVA_NO_AUTO_THINKING=1 to disable this; change any model's default in
@@ -68,7 +68,7 @@
  * compat surface), so it works under Pi's jiti extension loader.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getApiProvider, createAssistantMessageEventStream, calculateCost } from "@earendil-works/pi-ai";
 
 const BASE_API = "openai-responses"; // pristine built-in handler we delegate to
@@ -91,9 +91,8 @@ let savedApiKey: string | undefined;
 // startup with nothing re-entered. Path overridable via UVA_CREDENTIALS_FILE.
 function credsFile(): string {
   if (process.env.UVA_CREDENTIALS_FILE) return process.env.UVA_CREDENTIALS_FILE;
-  const os = require("node:os");
   const { join } = require("node:path");
-  return join(os.homedir(), ".pi", "agent", "openai-responses-uva.json");
+  return join(getAgentDir(), "openai-responses-uva.json");
 }
 
 function loadCreds(): { baseUrl?: string; apiKey?: string } | null {
@@ -275,12 +274,11 @@ function buildModelDef(info: ModelInfo, overrides: Record<string, any>) {
 
 // Per-id capability overrides (context window, reasoning, default thinking
 // level, ...) written by the /configure-models menu. Path is
-// UVA_MODEL_OVERRIDES_FILE or ~/.pi/agent/openai-responses-uva.models.json.
+// UVA_MODEL_OVERRIDES_FILE or openai-responses-uva.models.json in Pi's agent dir.
 function overridesFile(): string {
   if (process.env.UVA_MODEL_OVERRIDES_FILE) return process.env.UVA_MODEL_OVERRIDES_FILE;
-  const os = require("node:os");
   const { join } = require("node:path");
-  return join(os.homedir(), ".pi", "agent", "openai-responses-uva.models.json");
+  return join(getAgentDir(), "openai-responses-uva.models.json");
 }
 
 function loadOverrides(): Record<string, any> {

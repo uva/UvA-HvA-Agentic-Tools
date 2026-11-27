@@ -141,8 +141,9 @@ Start Pi and run:
 
 Choose "UvA / HvA proxy", pick a base URL (UvA / HvA / custom), and paste
 your API key. The extension discovers every model and saves your base URL + key
-to ~/.pi/agent/openai-responses-uva.json, so the next launch reconnects with
-nothing re-entered. /uva-login runs the same flow.
+to openai-responses-uva.json in Pi's agent dir (~/.pi/agent unless --agent-dir
+or PI_CODING_AGENT_DIR is set), so the next launch reconnects with nothing
+re-entered. /uva-login runs the same flow.
 
 Pi only lists the models that actually work for your key. During login, each
 model gets one tiny test request, so login can take up to two minutes. Models
@@ -176,7 +177,7 @@ variables (all optional):
 | UVA_API_KEY | - | API key, if you prefer env over /login. |
 | UVA_BASE_URL | https://llmproxy.uva.nl/v1 | Proxy base URL (must end at the /v1 root). |
 | UVA_PROVIDER_ID | uva | Provider id shown in /model and --provider. |
-| UVA_CREDENTIALS_FILE | ~/.pi/agent/openai-responses-uva.json | Override the saved-credentials path. |
+| UVA_CREDENTIALS_FILE | <agent dir>/openai-responses-uva.json | Override the saved-credentials path. |
 | UVA_NO_AUTO_THINKING | - | Set to disable the medium thinking default. |
 | UVA_MODEL_OVERRIDES_FILE | - | Path to a JSON file overriding per-model capabilities (below). |
 
@@ -189,7 +190,7 @@ Interactive menu (easiest): run /configure-models. Pick a model, then set
 its context window and max output (type the number), toggle reasoning on/off,
 and choose the default thinking level applied when that model is selected. Two
 options at the end, Save & apply changes and Discard & exit. Saved
-overrides are written to ~/.pi/agent/openai-responses-uva.models.json and
+overrides are written to openai-responses-uva.models.json in Pi's agent dir and
 applied live (and on every future launch).
 
 By hand: point UVA_MODEL_OVERRIDES_FILE at a JSON file (this overrides the
@@ -230,7 +231,7 @@ other settings unchanged. Only do this for 1M models; don't raise smaller
 models to 272k.
 
 To configure it by hand, merge the following into
-~/.pi/agent/openai-responses-uva.models.json (or your
+openai-responses-uva.models.json in Pi's agent dir (or your
 UVA_MODEL_OVERRIDES_FILE), preserving all other models and settings:
 
 ```json
