@@ -815,8 +815,14 @@ async function runBackgroundPoll(
     }
     throw new Error(`openai-responses-uva: HTTP ${res.status}: ${text.slice(0, 200).replace(/\s+/g, " ")}`);
   }
+  // Bedrock ignores background, answers finished and 500s on GET.
+  let terminal: any = data?.status === "completed" || data?.status === "incomplete" ? data : null;
+  if (data?.status === "failed" || data?.status === "cancelled") {
+    const e = data.error;
+    throw new Error(`openai-responses-uva: background ${data.status}: ${e?.message || e?.code || "no message"}`);
+  }
   const id = data?.id;
-  if (!id) throw new Error("openai-responses-uva: background response missing id");
+  if (!id && !terminal) throw new Error("openai-responses-uva: background response missing id");
 
   state.started = true;
   out.push({ type: "start", partial: output });
@@ -826,8 +832,6 @@ async function runBackgroundPoll(
   const deadline = Date.now() + 15 * 60 * 1000; // 15 min hard cap
   let delay = 1500;
   let getFails = 0;
-  // Bedrock ignores background, answers finished and 500s on GET.
-  let terminal: any = data.status === "completed" || data.status === "incomplete" ? data : null;
   while (!terminal) {
     if (signal?.aborted) throw new Error("openai-responses-uva: aborted");
     await sleep(delay);

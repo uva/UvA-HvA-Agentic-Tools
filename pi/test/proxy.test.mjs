@@ -12,6 +12,7 @@ const EXTENSION = join(dirname(fileURLToPath(import.meta.url)), "..", "index.ts"
 const PI_BIN = execFileSync("sh", ["-c", 'command -v "$0"', process.env.PI_BIN || "pi"], { encoding: "utf8" }).trim();
 const REPLY = "mock-reply-42";
 const CHAT_REPLY = "mock-chat-reply-7";
+const FAILURE = "mock-upstream-refusal";
 
 const requests = [];
 let server;
@@ -39,7 +40,7 @@ function sse(res, events) {
 function handle(req, res, body) {
   const path = req.url.split("?")[0];
   if (req.method === "GET" && path === "/v1/models") {
-    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-6.1-sol", "claude-sonnet-4.6", "gpt-35-turbo", "text-embedding-3"];
+    const ids = ["gpt-4.1", "gpt-6-sol", "gpt-6.1-sol", "gpt-6-luna", "gpt-6.2-sol", "claude-sonnet-4.6", "gpt-35-turbo", "text-embedding-3"];
     return res.end(JSON.stringify({ object: "list", data: ids.map((id) => ({ id, object: "model" })) }));
   }
   if (path === "/model_group/info") {
@@ -54,6 +55,10 @@ function handle(req, res, body) {
     }
     // Bedrock ignores background: it answers finished and cannot be polled.
     if (body?.background && body.model.startsWith("claude")) return res.end(JSON.stringify(completedResponse("resp_bedrock_1")));
+    if (body?.background && body.model === "gpt-6-luna") {
+      return res.end(JSON.stringify({ id: "resp_failed_1", object: "response", status: "failed", error: { message: FAILURE } }));
+    }
+    if (body?.background && body.model === "gpt-6.2-sol") return res.end(JSON.stringify({ ...completedResponse(), id: undefined }));
     if (body?.background) return res.end(JSON.stringify({ id: "resp_bg_1", object: "response", status: "queued" }));
     // The proxy collapses tool turns: only the terminal event carries the output.
     return sse(res, [{ type: "response.completed", response: completedResponse("resp_stream_1") }]);
@@ -190,6 +195,20 @@ test("a background reply that is already finished is not polled", async () => {
   const seen = since(n);
   assert.equal(seen.find((r) => r.method === "POST" && r.path === "/v1/responses")?.body?.background, true);
   assert.ok(!seen.some((r) => r.method === "GET" && r.path.startsWith("/v1/responses/")));
+});
+
+test("a background reply that already failed shows its error", async () => {
+  const n = requests.length;
+  const { code, stdout, stderr } = await runPi(["--model", "uva/gpt-6-luna", "-p", "hi"]);
+  assert.notEqual(code, 0, stdout + stderr);
+  assert.ok((stdout + stderr).includes(FAILURE), stdout + stderr);
+  assert.ok(!since(n).some((r) => r.method === "GET" && r.path.startsWith("/v1/responses/")));
+});
+
+test("a finished background reply without an id is used", async () => {
+  const { code, stdout, stderr } = await runPi(["--model", "uva/gpt-6.2-sol", "-p", "hi"]);
+  assert.equal(code, 0, stdout + stderr);
+  assert.ok(stdout.includes(REPLY), stdout + stderr);
 });
 
 test("gpt-35-turbo goes to chat completions without reasoning_effort", async () => {
