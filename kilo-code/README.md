@@ -33,7 +33,7 @@ reasoning and tools behave:
 | OpenAI reasoning (`gpt-6.x`, `gpt-5.x`, `o*`) | **OpenAI Responses** | `https://llmproxy.uva.nl/v1` |
 | Anthropic (`claude-*`) | **Anthropic Messages** | `https://llmproxy.uva.nl` |
 
-Using OpenAI Responses for the GPT-5.x reasoning models is what lets
+Using OpenAI Responses for the GPT-6.x and GPT-5.x reasoning models is what lets
 `reasoning_effort` work together with tool calls (the plain OpenAI Compatible
 path rejects that combination). You can add more than one custom provider, one
 per API shape, and mix their models freely.
@@ -87,5 +87,5 @@ docs for per-model options (token limits, tool calling).
 
 - Invalid API key: re-check the key in the provider dialog.
 - Model not found: use an id from `/v1/models`.
-- A GPT-5.x model errors with tools on "OpenAI Compatible": switch that
+- A GPT-6.x or GPT-5.x model errors with tools on "OpenAI Compatible": switch that
   provider's API to OpenAI Responses.
