@@ -8,8 +8,8 @@ setup guides for wiring that gateway into the coding assistants people actually
 use, plus a ready-made Pi extension.
 
 > These are best-effort guides. Tools, models, and endpoints change over time,
-> so a step may drift out of date. If you hit an issue or error, ask the UvA or
-> HvA AI chat about it, it is often the fastest way to get an answer.
+> so a step may drift out of date. If you run into a problem or an error, ask
+> the UvA or HvA AI chat about it. It is often the fastest way to get an answer.
 
 ## Get an API key
 
@@ -39,14 +39,15 @@ beyond the tool's own secret storage or an environment variable you control.
 | **Odysseus** | Self-hosted, OpenAI-compatible provider | A full self-hosted AI workspace | [odysseus/](odysseus/README.md) |
 
 For Pi, follow the [quick setup](pi/README.md#quick-setup) (copy-paste
-commands for Windows and Linux/macOS) to install Pi and
-[the extensions in my current development harness](pi/README.md#pi-harness-setup).
-If you only need the university provider, run pi install npm:pi-uva-hva;
+commands for Windows and Linux/macOS) to install Pi and the
+[recommended extensions, skills and MCP servers](pi/README.md#pi-harness-setup).
+If you only need the university provider, run `pi install npm:pi-uva-hva`;
 see the [manual setup](pi/README.md#install) for login instructions.
 
-For models with a 1M-token context window, we recommend to cap the context at 272k tokens. This keeps agentic work cheaper and keeps the model out of the range where
-its answers noticeably get worse.
-This is a working-context preference, not an output-token limit.
+For models with a 1M-token context window, we recommend capping the context
+at 272k tokens. This keeps agentic work cheaper and keeps the model out of the
+range where its answers get noticeably worse. It is a working-context
+preference, not an output-token limit.
 
 Any other tool that speaks the OpenAI or Anthropic API can point at the proxy
 too; see [opencode/](opencode/README.md) for the generic pattern.
@@ -71,8 +72,8 @@ Windows (PowerShell):
 
 Broadly: OpenAI GPT (`gpt-6.1-sol`, `gpt-6-luna`, `gpt-5.x`), Anthropic Claude
 (`claude-sonnet`, `claude-opus`, `claude-haiku`), and open-weight models
-(`gpt-oss`, `Qwen`, `mistral`). Reasoning models (`gpt-5.x`, `o*`, Claude) accept
-a thinking / `reasoning_effort` control.
+(`gpt-oss`, `Qwen`, `mistral`). Reasoning models (`gpt-6.x`, `gpt-5.x`, `o*`,
+Claude) accept a thinking / `reasoning_effort` control.
 
 ## Good to know: endpoints
 
@@ -106,7 +107,8 @@ The per-tool guides note where this matters.
 └── pi/                     the Pi provider extension (installable package)
     ├── README.md           full Pi extension docs
     ├── index.ts
-    └── package.json
+    ├── package.json
+    └── test/               offline test against a mock proxy
 ```
 
 ## Contributing
