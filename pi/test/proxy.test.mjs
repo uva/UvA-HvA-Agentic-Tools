@@ -87,6 +87,7 @@ before(async () => {
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   baseUrl = `http://127.0.0.1:${server.address().port}/v1`;
   writeFileSync(join(tmp, "creds.json"), JSON.stringify({ baseUrl, apiKey: "sk-test-creds" }));
+  writeFileSync(join(tmp, "saved.json"), JSON.stringify({ baseUrl, apiKey: "sk-test-saved" }));
 });
 
 after(() => {
@@ -94,10 +95,14 @@ after(() => {
   if (tmp) rmSync(tmp, { recursive: true, force: true });
 });
 
-function runPi(args) {
+function runPi(args, extraEnv = {}) {
   const home = mkdtempSync(join(tmp, "home-"));
   const env = { ...process.env, HOME: home, UVA_CREDENTIALS_FILE: join(tmp, "creds.json"), UVA_API_KEY: "sk-test-env" };
   for (const k of ["OPENAI_API_KEY", "UVA_MODEL_OVERRIDES_FILE", "PI_CODING_AGENT_DIR", "UVA_BASE_URL", "UVA_PROVIDER_ID"]) delete env[k];
+  for (const [k, v] of Object.entries(extraEnv)) {
+    if (v === undefined) delete env[k];
+    else env[k] = v;
+  }
   const agentDir = mkdtempSync(join(tmp, "agent-"));
   const full = ["--agent-dir", agentDir, "--offline", "-ne", "--no-session", "-e", EXTENSION, ...args];
   return new Promise((resolve, reject) => {
@@ -163,4 +168,31 @@ test("gpt-35-turbo goes to chat completions without reasoning_effort", async () 
   const posts = since(n).filter((r) => r.method === "POST" && r.path === "/v1/chat/completions");
   assert.equal(posts.length, 1);
   assert.ok(!("reasoning_effort" in posts[0].body), JSON.stringify(posts[0].body));
+});
+
+test("a saved login alone is enough", async () => {
+  const env = { UVA_API_KEY: undefined, UVA_CREDENTIALS_FILE: join(tmp, "saved.json") };
+  const list = await runPi(["--list-models", "uva"], env);
+  assert.equal(list.code, 0, list.stderr);
+  assert.ok(list.stdout.includes("gpt-4.1"), list.stdout + list.stderr);
+  const n = requests.length;
+  const { code, stdout, stderr } = await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
+  assert.equal(code, 0, stdout + stderr);
+  assert.ok(stdout.includes(REPLY), stdout + stderr);
+  const posts = since(n).filter((r) => r.method === "POST" && r.path === "/v1/responses");
+  assert.equal(posts.length, 1);
+  assert.equal(posts[0].auth, "Bearer sk-test-saved");
+});
+
+test("agent turns never carry OPENAI_API_KEY", async () => {
+  const env = {
+    UVA_API_KEY: undefined,
+    UVA_CREDENTIALS_FILE: join(tmp, "missing.json"),
+    UVA_BASE_URL: baseUrl,
+    OPENAI_API_KEY: "sk-test-openai",
+  };
+  const n = requests.length;
+  await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
+  const turns = since(n).filter((r) => r.method === "POST" && /^\/v1\/(responses|chat\/completions)$/.test(r.path));
+  assert.ok(!turns.some((r) => r.auth?.includes("sk-test-openai")), JSON.stringify(turns.map((r) => r.auth)));
 });

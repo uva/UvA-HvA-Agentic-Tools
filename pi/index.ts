@@ -85,6 +85,7 @@ const PROVIDER_ID = process.env.UVA_PROVIDER_ID || "uva";
 // (from the /login flow) at startup, and updated live on login.
 let activeBaseUrl = (process.env.UVA_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 let activeApiKey: string | undefined = process.env.UVA_API_KEY || process.env.OPENAI_API_KEY;
+let savedApiKey: string | undefined;
 
 // Persisted login (base URL + API key) so model discovery works at the next
 // startup with nothing re-entered. Path overridable via UVA_CREDENTIALS_FILE.
@@ -1123,7 +1124,8 @@ function registerProviderNow(pi: ExtensionAPI, models: any[], baseUrl: string): 
   pi.registerProvider(PROVIDER_ID, {
     name: "UvA / HvA (Responses fix)",
     baseUrl: baseUrl.replace(/\/+$/, ""),
-    apiKey: "$UVA_API_KEY",
+    // Pi reads "$" as an env reference and a leading "!" as a shell command.
+    apiKey: savedApiKey ? savedApiKey.replace(/[$!]/g, "$$$&") : "$UVA_API_KEY",
     api: CUSTOM_API,
     models,
     streamSimple: uvaStreamSimple as any,
@@ -1171,7 +1173,7 @@ function makeOAuth(pi: ExtensionAPI) {
       callbacks.onProgress?.(`Connected, ${models.length} working models available.`);
 
       saveCreds({ baseUrl, apiKey });
-      activeApiKey = apiKey;
+      activeApiKey = savedApiKey = apiKey;
       activeBaseUrl = baseUrl;
       registerProviderNow(pi, models, baseUrl);
 
@@ -1267,7 +1269,7 @@ async function configureOneModel(ctx: any, id: string, draft: Record<string, any
 export default async function (pi: ExtensionAPI): Promise<void> {
   const creds = loadCreds();
   if (creds?.baseUrl) activeBaseUrl = String(creds.baseUrl).replace(/\/+$/, "");
-  if (creds?.apiKey) activeApiKey = creds.apiKey;
+  if (creds?.apiKey) activeApiKey = savedApiKey = creds.apiKey;
 
   registerProviderNow(pi, await buildWorkingModels(activeApiKey, activeBaseUrl, false), activeBaseUrl);
 
