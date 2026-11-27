@@ -84,7 +84,7 @@ const PROVIDER_ID = process.env.UVA_PROVIDER_ID || "uva";
 // Active connection settings. Seeded from env, overridden by saved credentials
 // (from the /login flow) at startup, and updated live on login.
 let activeBaseUrl = (process.env.UVA_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
-let activeApiKey: string | undefined = process.env.UVA_API_KEY || process.env.OPENAI_API_KEY;
+let activeApiKey: string | undefined = process.env.UVA_API_KEY;
 let savedApiKey: string | undefined;
 
 // Persisted login (base URL + API key) so model discovery works at the next
@@ -940,7 +940,7 @@ function uvaStreamSimple(model: any, context: any, options: any): any {
         if (next !== undefined) params = next;
       }
 
-      const apiKey = options?.apiKey || activeApiKey || process.env.UVA_API_KEY || process.env.OPENAI_API_KEY;
+      const apiKey = options?.apiKey || activeApiKey || process.env.UVA_API_KEY;
       if (!apiKey) throw new Error("openai-responses-uva: no API key (run /login or set UVA_API_KEY)");
       const url = String(model.baseUrl || activeBaseUrl).replace(/\/+$/, "") + "/responses";
 

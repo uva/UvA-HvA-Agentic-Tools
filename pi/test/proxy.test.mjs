@@ -196,3 +196,22 @@ test("agent turns never carry OPENAI_API_KEY", async () => {
   const turns = since(n).filter((r) => r.method === "POST" && /^\/v1\/(responses|chat\/completions)$/.test(r.path));
   assert.ok(!turns.some((r) => r.auth?.includes("sk-test-openai")), JSON.stringify(turns.map((r) => r.auth)));
 });
+
+test("an OpenAI key alone never reaches the proxy", async () => {
+  const env = {
+    UVA_API_KEY: undefined,
+    UVA_CREDENTIALS_FILE: join(tmp, "missing.json"),
+    UVA_BASE_URL: baseUrl,
+    OPENAI_API_KEY: "sk-test-openai",
+  };
+  const n = requests.length;
+  await runPi(["--list-models", "uva"], env);
+  await runPi(["--model", "uva/gpt-4.1", "-p", "hi"], env);
+  const auths = since(n).map((r) => `${r.method} ${r.path} ${r.auth}`);
+  assert.ok(!auths.some((a) => a.includes("sk-test-openai")), auths.join("\n"));
+});
+
+after(() => {
+  const leaked = requests.filter((r) => r.auth?.includes("sk-test-openai"));
+  assert.equal(leaked.length, 0, leaked.map((r) => `${r.method} ${r.path}`).join("\n"));
+});
