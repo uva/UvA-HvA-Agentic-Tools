@@ -70,7 +70,7 @@ Windows (PowerShell):
   -Headers @{ Authorization = "Bearer YOUR_KEY" }).data.id
 ```
 
-Broadly: OpenAI GPT (`gpt-6.1-sol`, `gpt-6-luna`, `gpt-5.x`), Anthropic Claude
+Broadly: OpenAI GPT (`gpt-6.2-sol`, `gpt-6-luna`, `gpt-5.x`), Anthropic Claude
 (`claude-sonnet`, `claude-opus`, `claude-haiku`), and open-weight models
 (`gpt-oss`, `Qwen`, `mistral`). Reasoning models (`gpt-6.x`, `gpt-5.x`, `o*`,
 Claude) accept a thinking / `reasoning_effort` control.
