@@ -350,9 +350,11 @@ with the agent's permissions; read them before use.
 
 ### MCP servers
 
-Public MCP servers we use through pi-mcp-adapter. Merge them into the
-mcpServers of ~/.pi/agent/mcp-adapter.json (all projects; create the file if
-it does not exist), then restart Pi or run /reload:
+Public MCP servers we use through Pi's built-in MCP support. Merge them into
+the mcpServers of ~/.pi/agent/mcp.json (all projects; create the file if it
+does not exist), check them with pi mcp list, then restart Pi or run /reload.
+If you still have pi-mcp-adapter installed, remove it: it replaces the
+built-in support, and Pi then ignores mcp.json.
 
 ```json
 {
@@ -360,8 +362,8 @@ it does not exist), then restart Pi or run /reload:
     "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest", "--headless"] },
     "deepwiki": { "url": "https://mcp.deepwiki.com/mcp" },
     "context7": { "url": "https://mcp.context7.com/mcp" },
-    "parallel-search": { "url": "https://search.parallel.ai/mcp", "directTools": true },
-    "github": { "url": "https://api.githubcopilot.com/mcp", "auth": "bearer", "bearerToken": "!gh auth token" },
+    "parallel-search": { "url": "https://search.parallel.ai/mcp", "exposure": "direct" },
+    "github": { "url": "https://api.githubcopilot.com/mcp", "headers": { "Authorization": "!echo Bearer $(gh auth token)" } },
     "shadcn": { "command": "npx", "args": ["-y", "shadcn@latest", "mcp"] },
     "ui-layouts": { "command": "npx", "args": ["-y", "@ui-layouts/mcp@latest"] },
     "lazyweb": { "url": "https://www.lazyweb.com/mcp/public" },
@@ -376,7 +378,7 @@ it does not exist), then restart Pi or run /reload:
 | [deepwiki](https://deepwiki.com) | Ask questions about public GitHub repositories. |
 | [context7](https://context7.com) | Up-to-date library and framework documentation. |
 | [parallel-search](https://parallel.ai) | Web search and page fetching for agents. |
-| [github](https://github.com/github/github-mcp-server) | Issues, pull requests and code on GitHub. Needs the [GitHub CLI](https://cli.github.com) logged in (gh auth login); the token is read at connect time, never stored in the file. |
+| [github](https://github.com/github/github-mcp-server) | Issues, pull requests and code on GitHub. Needs the [GitHub CLI](https://cli.github.com) logged in (gh auth login); the token is read at connect time, never stored in the file. Checked on Linux; if the command fails on Windows, set GITHUB_TOKEN and use "Bearer ${GITHUB_TOKEN}" instead. |
 | [shadcn](https://ui.shadcn.com/docs/mcp) | Browse and add shadcn/ui components. |
 | [ui-layouts](https://www.ui-layouts.com) | UI layout and component examples. |
 | [lazyweb](https://www.lazyweb.com) | Real-app UI design references. |
