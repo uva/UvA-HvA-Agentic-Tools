@@ -94,7 +94,8 @@ pi list
 Already-installed packages are fine to re-run. Want only some? Remove them from
 the list; only pi-uva-hva is needed for the university proxy.
 
-Optional: [public skills](#skills) and [MCP servers](#mcp-servers).
+We also recommend [Matt Pocock's skills](#skills). Optional:
+[MCP servers](#mcp-servers).
 
 ### 4. Log in and pick a model
 
@@ -330,20 +331,22 @@ requirement to install everything just to use the university proxy. The
 
 ### Skills
 
-Skills are reusable instructions the agent loads when a task matches. We use
-the public [mattpocock/skills](https://github.com/mattpocock/skills) set (TDD,
-bug diagnosis, code review, PR writing, specs and tickets, grilling a plan,
-prototyping, and more). Install them for Pi with the
+Skills are reusable instructions the agent loads when a task matches. We
+recommend all of Matt Pocock's [skills](https://github.com/mattpocock/skills):
+they help with planning, TDD, debugging, review, and specs and tickets, for
+example grill-with-docs, tdd, diagnosing-bugs, code-review, to-spec and
+to-tickets. Install all of them globally for Pi with the
 [skills CLI](https://www.npmjs.com/package/skills) (same command on every
 platform):
 
 ```bash
-npx skills add mattpocock/skills -g -a pi -s '*' -y
+npx skills@latest add mattpocock/skills -g -a pi -s '*' -y
 ```
 
-They land in ~/.agents/skills, which Pi reads on start. Update later with
-npx skills update -g. Skills run with the agent's permissions; read them
-before use.
+They land in ~/.agents/skills, which Pi reads on start. Run
+/setup-matt-pocock-skills once per repo. Update later with
+npx skills@latest update -g, and re-run add to pick up new skills. Skills run
+with the agent's permissions; read them before use.
 
 ### MCP servers
 
