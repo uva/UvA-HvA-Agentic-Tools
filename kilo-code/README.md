@@ -1,6 +1,6 @@
 # Kilo Code + UvA / HvA proxy
 
-[Kilo Code](https://kilocode.ai) is an AI coding agent for VS Code (and a CLI).
+[Kilo Code](https://kilo.ai/) is an AI coding agent for VS Code (and a CLI).
 It supports custom providers, including OpenAI-compatible, OpenAI Responses, and
 Anthropic Messages endpoints, so it can talk to the proxy on whichever endpoint
 suits the model.
