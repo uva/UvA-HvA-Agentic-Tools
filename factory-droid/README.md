@@ -68,7 +68,7 @@ Based on the official
 | Models | `provider` | Endpoint used | Base URL |
 | --- | --- | --- | --- |
 | Anthropic (`claude-*`) | `anthropic` | Anthropic Messages (`/v1/messages`) | `https://llmproxy.uva.nl` |
-| OpenAI reasoning (`gpt-5.x`, `o*`) | `openai` | OpenAI Responses (`/v1/responses`) | `https://llmproxy.uva.nl/v1` |
+| OpenAI reasoning (`gpt-6.x`, `gpt-5.x`, `o*`) | `openai` | OpenAI Responses (`/v1/responses`) | `https://llmproxy.uva.nl/v1` |
 | GPT-4 + open-weight (`gpt-4o`, `gpt-oss`, `Qwen`, `mistral`) | `generic-chat-completion-api` | Chat Completions (`/v1/chat/completions`) | `https://llmproxy.uva.nl/v1` |
 
 Factory notes that `provider: "openai"` (Responses API) is required for the

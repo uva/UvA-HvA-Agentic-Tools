@@ -30,7 +30,7 @@ reasoning and tools behave:
 | Models | Provider API | Base URL |
 | --- | --- | --- |
 | Open-weight + GPT-4 (`gpt-4o`, `gpt-oss`, `Qwen`, `mistral`) | **OpenAI Compatible** | `https://llmproxy.uva.nl/v1` |
-| OpenAI reasoning (`gpt-5.x`, `o*`) | **OpenAI Responses** | `https://llmproxy.uva.nl/v1` |
+| OpenAI reasoning (`gpt-6.x`, `gpt-5.x`, `o*`) | **OpenAI Responses** | `https://llmproxy.uva.nl/v1` |
 | Anthropic (`claude-*`) | **Anthropic Messages** | `https://llmproxy.uva.nl` |
 
 Using OpenAI Responses for the GPT-5.x reasoning models is what lets
